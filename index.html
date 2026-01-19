@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>M-Coin City: Urban Grid</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --m-blue: #0ea5e9; --m-green: #10b981; --m-gold: #f59e0b;
-            --glass: rgba(255, 255, 255, 0.8);
+            --glass: rgba(255, 255, 255, 0.9);
         }
 
         body {
@@ -16,7 +17,7 @@
             margin: 0; padding: 0; overflow: hidden; color: #1e293b; user-select: none;
         }
 
-        /* --- MODERN ÜST PANEL (Aydınlık Stil) --- */
+        /* --- ÜST PANEL (HUD) --- */
         .hud {
             position: fixed; top: 0; width: 100%; z-index: 100;
             background: var(--glass); backdrop-filter: blur(10px);
@@ -25,133 +26,124 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
         .res-item { display: flex; flex-direction: column; align-items: center; border-right: 1px solid #e2e8f0; }
-        .res-item:last-child { border-right: none; }
-        .res-item img { width: 20px; margin-bottom: 2px; }
-        .res-val { font-size: 13px; font-weight: 700; }
+        .res-item img { width: 18px; margin-bottom: 2px; }
+        .res-val { font-size: 13px; font-weight: 700; font-family: 'Orbitron', sans-serif; }
 
-        /* --- ANA HARİTA TABANI --- */
-        .map-wrapper {
+        /* --- HARİTA VE PARSELLER --- */
+        .map-container {
             width: 100vw; height: 100vh;
-            background-image: url('assets/sehir.png'); /* Bina içermeyen boş şehir planın */
+            background-image: url('assets/sehir.png'); /* Senin ürettiğin harita */
             background-size: cover; background-position: center;
             position: relative;
         }
 
-        /* --- İNŞAAT PARSELLERİ (Plots) --- */
+        /* İnşa Edilebilir Alanlar (Plotlar) */
         .plot {
-            position: absolute; width: 70px; height: 70px;
-            background: rgba(255, 255, 255, 0.4);
-            border: 2px dashed var(--m-blue); border-radius: 12px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s ease;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            position: absolute; width: 60px; height: 60px;
+            background: rgba(14, 165, 233, 0.1);
+            border: 2px dashed var(--m-blue); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.3s ease;
+            animation: pulse 2s infinite;
         }
-        .plot:hover { background: rgba(14, 165, 233, 0.1); transform: scale(1.05); }
-        .plot.active { border: 2px solid var(--m-green); background: #fff; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
-        .plot img { width: 50px; height: 50px; z-index: 2; }
-        .plot b { font-size: 9px; margin-top: 4px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+        }
 
-        /* Parsel Yerleşimi (Boş haritana göre buraları değiştirebilirsin) */
-        #p1 { top: 15%; left: 15%; } #p2 { top: 15%; right: 15%; }
-        #p3 { top: 40%; left: 10%; } #p4 { top: 40%; right: 10%; }
-        #p5 { bottom: 25%; left: 15%; } #p6 { bottom: 25%; right: 15%; }
-        #p7 { top: 30%; left: 45%; } #p8 { bottom: 35%; left: 45%; }
+        .plot.active {
+            background: #fff; border: 2px solid var(--m-green);
+            border-radius: 12px; animation: none; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .plot img { width: 45px; height: 45px; }
+        .plot b { position: absolute; bottom: -22px; font-size: 8px; color: #1e293b; background: var(--glass); padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
 
-        /* --- MAYA STRATEJİ PANELİ --- */
+        /* Haritadaki Boş Gri/Yeşil Alanlara Göre Koordinatlar */
+        #p1 { top: 20%; left: 25%; }  #p2 { top: 22%; right: 28%; }
+        #p3 { top: 45%; left: 18%; }  #p4 { top: 48%; right: 20%; }
+        #p5 { bottom: 28%; left: 35%; } #p6 { bottom: 30%; right: 38%; }
+        #p7 { top: 35%; left: 48%; }  #p8 { bottom: 15%; left: 50%; }
+
+        /* --- MODAL VE DANIŞMAN --- */
         .advisor {
             position: fixed; bottom: 85px; left: 15px; right: 15px;
-            background: #fff; border-radius: 20px; padding: 15px;
-            display: flex; align-items: center; gap: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 90;
+            background: #fff; border-radius: 15px; padding: 12px;
+            display: flex; align-items: center; gap: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
-        .maya-thumb { width: 50px; height: 50px; border-radius: 15px; background: #e0f2fe url('https://cdn-icons-png.flaticon.com/512/4140/4140037.png') center/cover; }
-        .maya-msg { flex: 1; font-size: 12px; color: #475569; line-height: 1.5; font-weight: 500; }
+        .maya-ava { width: 45px; height: 45px; border-radius: 10px; background: url('https://cdn-icons-png.flaticon.com/512/4140/4140037.png') center/cover; }
+        .maya-txt { flex: 1; font-size: 11px; font-weight: 500; color: #475569; }
 
-        /* --- MODAL (İnşaat Menüsü) --- */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
-            z-index: 1000; display: none; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000;
         }
-        .modal-body {
-            background: #fff; width: 85%; border-radius: 24px; padding: 24px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-        }
-        .build-option {
-            display: flex; align-items: center; gap: 12px; padding: 12px;
-            border: 1px solid #f1f5f9; border-radius: 16px; margin-bottom: 12px;
-        }
-        .build-option img { width: 40px; }
-        .build-btn {
-            background: var(--m-blue); color: #fff; border: none; padding: 10px 16px;
-            border-radius: 12px; font-weight: 700; margin-left: auto;
-        }
+        .modal-card { background: #fff; width: 80%; border-radius: 20px; padding: 20px; text-align: center; }
+        .build-item { border: 1px solid #e2e8f0; border-radius: 15px; padding: 15px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; }
+        .btn-buy { background: var(--m-blue); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; }
 
-        /* --- ALT NAV --- */
-        .nav {
-            position: fixed; bottom: 0; width: 100%; height: 75px;
-            background: #fff; display: grid; grid-template-columns: repeat(3, 1fr);
-            align-items: center; border-top: 1px solid #f1f5f9;
-        }
-        .nav-item { text-align: center; color: #94a3b8; font-size: 11px; font-weight: 600; }
-        .nav-item.active { color: var(--m-blue); }
+        .nav { position: fixed; bottom: 0; width: 100%; height: 65px; background: #fff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; }
+        .nav-opt { text-align: center; font-size: 10px; font-weight: bold; color: #94a3b8; }
+        .nav-opt.active { color: var(--m-blue); }
     </style>
 </head>
 <body>
 
     <div class="hud">
-        <div class="res-item"><img src="https://cdn-icons-png.flaticon.com/512/2489/2489756.png"><span id="cash" class="res-val" style="color:var(--m-green)">0</span></div>
-        <div class="res-item"><img src="https://cdn-icons-png.flaticon.com/512/2103/2103633.png"><span id="data" class="res-val" style="color:var(--m-blue)">0</span></div>
-        <div class="res-item"><img src="https://cdn-icons-png.flaticon.com/512/2906/2906236.png"><span id="energy" class="res-val" style="color:var(--m-gold)">0</span></div>
-        <div class="res-item"><img src="https://cdn-icons-png.flaticon.com/512/3112/3112946.png"><span id="fame" class="res-val" style="color:#e11d48">0</span></div>
+        <div class="res-item"><img src="https://cdn-icons-png.flaticon.com/512/2489/2489756.png"><span id="cash" class="res-val" style="color:var(--m-green)">500</span></div>
+        <div class="res-item"><img src="https://cdn-icons-png.flaticon.com/512/2103/2103633.png"><span id="data" class="res-val" style="color:var(--m-blue)">200</span></div>
+        <div class="res-item"><img src="https://cdn-icons-png.flaticon.com/512/2906/2906236.png"><span id="energy" class="res-val" style="color:var(--m-gold)">100</span></div>
+        <div class="res-item"><img src="https://cdn-icons-png.flaticon.com/512/3112/3112946.png"><span id="fame" class="res-val" style="color:#e11d48">50</span></div>
     </div>
 
-    <div class="map-wrapper">
-        <div id="p1" class="plot" onclick="openBuild(1)"><b>Parsel 1</b></div>
-        <div id="p2" class="plot" onclick="openBuild(2)"><b>Parsel 2</b></div>
-        <div id="p3" class="plot" onclick="openBuild(3)"><b>Parsel 3</b></div>
-        <div id="p4" class="plot" onclick="openBuild(4)"><b>Parsel 4</b></div>
-        <div id="p5" class="plot" onclick="openBuild(5)"><b>Parsel 5</b></div>
-        <div id="p6" class="plot" onclick="openBuild(6)"><b>Parsel 6</b></div>
-        <div id="p7" class="plot" onclick="openBuild(7)"><b>Parsel 7</b></div>
-        <div id="p8" class="plot" onclick="openBuild(8)"><b>Parsel 8</b></div>
+    <div class="map-container">
+        <div id="p1" class="plot" onclick="selectPlot(1)"><b>ARSA 1</b></div>
+        <div id="p2" class="plot" onclick="selectPlot(2)"><b>ARSA 2</b></div>
+        <div id="p3" class="plot" onclick="selectPlot(3)"><b>ARSA 3</b></div>
+        <div id="p4" class="plot" onclick="selectPlot(4)"><b>ARSA 4</b></div>
+        <div id="p5" class="plot" onclick="selectPlot(5)"><b>ARSA 5</b></div>
+        <div id="p6" class="plot" onclick="selectPlot(6)"><b>ARSA 6</b></div>
+        <div id="p7" class="plot" onclick="selectPlot(7)"><b>ARSA 7</b></div>
+        <div id="p8" class="plot" onclick="selectPlot(8)"><b>ARSA 8</b></div>
     </div>
 
     <div class="advisor">
-        <div class="maya-thumb"></div>
-        <div id="maya-text" class="maya-msg">Başkanım, şehir planımız hazır. Boş parsellere tıklayarak ilk binalarımızı konumlandırabiliriz.</div>
+        <div class="maya-ava"></div>
+        <div id="maya-msg" class="maya-txt">Şehir planı harika başkanım! Mavi halkalara tıklayarak modern binalarımızı dikmeye başlayabiliriz.</div>
     </div>
 
-    <div id="modal-build" class="modal">
-        <div class="modal-body">
-            <h3 style="margin-top:0">Bina İnşa Et</h3>
-            <div class="build-option">
-                <img src="https://cdn-icons-png.flaticon.com/512/1055/1055666.png">
-                <div><b>Teknoloji Ofisi</b><br><small>+20 Veri/sa | 300 Nakit</small></div>
-                <button class="build-btn" onclick="construct(300, 'Teknoloji Ofisi', 'https://cdn-icons-png.flaticon.com/512/1055/1055666.png')">KUR</button>
+    <div id="modal" class="modal">
+        <div class="modal-card">
+            <h3 style="margin:0 0 15px 0; font-family:'Orbitron'">YATIRIM SEÇ</h3>
+            <div class="build-item">
+                <div style="text-align:left"><b>🏢 BANKA</b><br><small>+50 Nakit/sa</small></div>
+                <button class="btn-buy" onclick="build(300, 'Banka', 'https://cdn-icons-png.flaticon.com/512/2830/2830284.png', 'cash', 50)">300 💵</button>
             </div>
-            <button onclick="closeModal()" style="width:100%; border:none; background:none; color:#94a3b8; font-weight:bold;">VAZGEÇ</button>
+            <div class="build-item">
+                <div style="text-align:left"><b>🔬 LAB</b><br><small>+30 Veri/sa</small></div>
+                <button class="btn-buy" onclick="build(200, 'Lab', 'https://cdn-icons-png.flaticon.com/512/4300/4300058.png', 'data', 30)">200 💵</button>
+            </div>
+            <button onclick="closeModal()" style="margin-top:15px; background:none; border:none; color:#94a3b8; font-weight:bold;">KAPAT</button>
         </div>
     </div>
 
     <div class="nav">
-        <div class="nav-item active">🏙️ ŞEHİR</div>
-        <div class="nav-item">📈 BORSA</div>
-        <div class="nav-item">⚙️ AYARLAR</div>
+        <div class="nav-opt active">CITY</div>
+        <div class="nav-opt">MARKET</div>
+        <div class="nav-opt">RANK</div>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let state = JSON.parse(localStorage.getItem('mcity_urban_safe')) || {
-            res: { cash: 1000, data: 500, energy: 300, fame: 100 },
-            prod: { cash: 20, data: 10 },
-            buildings: {},
-            isConstructing: false
+        let state = JSON.parse(localStorage.getItem('mcity_plot_v1')) || {
+            res: { cash: 500, data: 200, energy: 100, fame: 50 },
+            prod: { cash: 5, data: 2 },
+            buildings: {}
         };
 
-        let selectedPlot = null;
+        let currentPlot = null;
 
         function updateUI() {
             document.getElementById('cash').innerText = Math.floor(state.res.cash);
@@ -166,28 +158,35 @@
                     p.innerHTML = `<img src="${state.buildings[i].img}"><b>${state.buildings[i].name}</b>`;
                 }
             }
-            localStorage.setItem('mcity_urban_safe', JSON.stringify(state));
+            localStorage.setItem('mcity_plot_v1', JSON.stringify(state));
         }
 
-        function openBuild(id) {
-            if(state.buildings[id]) return;
-            selectedPlot = id;
-            document.getElementById('modal-build').style.display = 'flex';
+        function selectPlot(id) {
+            if(state.buildings[id]) {
+                updateMaya(`${state.buildings[i].name} zaten burada çalışıyor başkanım.`);
+                return;
+            }
+            currentPlot = id;
+            document.getElementById('modal').style.display = 'flex';
         }
 
-        function closeModal() { document.getElementById('modal-build').style.display = 'none'; }
+        function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-        function construct(cost, name, img) {
+        function build(cost, name, img, type, bonus) {
             if(state.res.cash >= cost) {
                 state.res.cash -= cost;
-                state.buildings[selectedSlot = selectedPlot] = { name, img };
+                state.buildings[currentPlot] = { name, img, type, bonus };
+                state.prod[type] += bonus;
                 closeModal();
+                updateMaya(`${name} başarıyla kuruldu! Ekonomimiz büyüyor.`);
                 tg.HapticFeedback.notificationOccurred('success');
                 updateUI();
             } else {
-                tg.showAlert("Yetersiz sermaye!");
+                tg.showAlert("Yeterli nakit yok başkanım!");
             }
         }
+
+        function updateMaya(m) { document.getElementById('maya-msg').innerText = m; }
 
         setInterval(() => {
             state.res.cash += state.prod.cash / 10;
