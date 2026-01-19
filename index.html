@@ -3,185 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Coin City: Empire Era</title>
+    <title>M-Coin City: People's Voice</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --m-red: #e31b23; --m-green: #00a650; --m-blue: #008dce; --m-gold: #f9a825; --bg: #f0e6d2; }
         body { font-family: 'Arial Black', sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; overflow: hidden; height: 100vh; }
 
-        /* Header & Level Info */
-        .header { background: var(--m-red); color: white; padding: 10px; display: flex; justify-content: space-between; border-bottom: 5px solid #222; font-size: 11px; }
-        
-        /* Stats Dashboard */
-        .stats-dashboard { background: white; border: 4px solid #333; margin: 10px auto; width: 92%; border-radius: 15px; padding: 12px; text-align: center; box-shadow: 6px 6px 0px #333; position: relative; }
-        .coin-val { font-size: 34px; color: var(--m-green); font-weight: bold; }
-        .bonus-info { font-size: 11px; color: var(--m-blue); font-weight: bold; }
+        /* Dashboard */
+        .header { background: var(--m-red); color: white; padding: 8px 15px; display: flex; justify-content: space-between; border-bottom: 5px solid #222; font-size: 10px; }
+        .stats-card { background: white; border: 4px solid #333; margin: 8px auto; width: 92%; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 5px 5px 0px #333; }
+        .coin-val { font-size: 32px; color: var(--m-green); font-weight: bold; display: block; }
 
-        /* Evolution City Core */
-        #city-evolution { width: 190px; height: 190px; background: white; border: 8px solid #333; margin: 15px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; transition: 0.1s; cursor: pointer; box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        #city-evolution:active { transform: scale(0.94); }
-        #city-img { width: 120px; transition: 0.5s; }
+        /* Mutluluk Barı (Yeni!) */
+        .happiness-box { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 5px; font-size: 12px; }
+        .happy-bar-bg { width: 100px; height: 10px; background: #333; border-radius: 5px; overflow: hidden; border: 1px solid #333; }
+        #happy-fill { width: 100%; height: 100%; background: var(--m-green); transition: 0.5s; }
 
-        /* Progress Bars */
-        .bars-container { padding: 0 20px; }
-        .progress-label { font-size: 9px; font-weight: bold; margin-bottom: 2px; display: block; }
-        .progress-bg { width: 100%; height: 15px; background: #333; border-radius: 8px; border: 2px solid #333; overflow: hidden; margin-bottom: 6px; }
-        #energy-fill { width: 100%; height: 100%; background: var(--m-gold); transition: 0.2s; }
-        #xp-fill { width: 0%; height: 100%; background: var(--m-blue); transition: 0.5s; }
+        /* City Core */
+        #main-city { width: 170px; height: 170px; background: white; border: 8px solid #333; margin: 15px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: 0.1s; }
+        #main-city:active { transform: scale(0.92); }
+        #city-img { width: 110px; }
 
-        /* Bottom Action Menu */
-        .action-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px; background: #fff; border-top: 4px solid #333; position: fixed; bottom: 0; width: 100%; box-sizing: border-box; }
-        .action-item { background: #eee; border: 2px solid #333; padding: 8px 2px; border-radius: 8px; font-size: 9px; font-weight: bold; text-align: center; cursor: pointer; }
-        .action-item.raid { background: #ffcdd2; color: #b71c1c; }
+        /* Resources */
+        .resource-section { padding: 0 20px; }
+        .p-label { font-size: 9px; font-weight: bold; margin-bottom: 2px; display: block; }
+        .p-bar-bg { width: 100%; height: 12px; background: #333; border-radius: 6px; border: 2px solid #333; overflow: hidden; margin-bottom: 5px; }
+        #en-fill { width: 100%; height: 100%; background: var(--m-gold); }
+        #xp-fill { width: 0%; height: 100%; background: var(--m-blue); }
 
-        /* Maya & Event Overlays */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: white; }
+        /* Siyaset Menüsü */
+        .policy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
+        .policy-btn { background: #fff; border: 3px solid #333; padding: 10px; border-radius: 10px; font-size: 9px; font-weight: bold; text-align: center; cursor: pointer; box-shadow: 3px 3px 0 #333; }
+        .policy-btn.tax { background: #fff9c4; }
+        .policy-btn.festival { background: #f8bbd0; }
+
+        /* Maya Modal */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; }
         .modal.active { display: flex; }
-        .maya-pic { width: 160px; margin-bottom: 15px; border-radius: 50%; border: 4px solid var(--m-gold); }
-        .speech { background: white; color: #333; border: 4px solid #333; padding: 20px; border-radius: 20px; width: 80%; font-weight: bold; font-size: 14px; box-shadow: 8px 8px 0 var(--m-red); }
-        .confirm-btn { margin-top: 25px; background: var(--m-gold); border: 3px solid #333; padding: 12px 40px; border-radius: 12px; font-weight: bold; color: #333; cursor: pointer; }
+        .maya-ava { width: 150px; border: 4px solid var(--m-gold); border-radius: 50%; }
+        .msg-box { background: white; color: #333; border: 4px solid #333; padding: 20px; border-radius: 20px; width: 80%; font-weight: bold; margin: 15px 0; text-align: center; }
+        .modal-btn { background: var(--m-gold); border: 3px solid #333; padding: 10px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
-        .floating { position: absolute; font-weight: bold; color: var(--m-green); animation: rise 0.7s forwards; pointer-events: none; }
-        @keyframes rise { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        /* Floating Text */
+        .float { position: absolute; color: var(--m-red); font-weight: bold; animation: fly 0.6s forwards; pointer-events: none; }
+        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div id="user-rank">🏛️ METROPOL ADAYI</div>
-    <div id="user-lv">Lv. 1</div>
+    <div id="u-title">🏛️ ŞEHİR KURUCUSU</div>
+    <div id="u-lv">Lv. 1</div>
 </div>
 
-<div class="stats-dashboard">
-    <span class="coin-val">🪙 <span id="coin-val">0</span></span>
-    <div class="bonus-info">Pasif: +<span id="pps-val">0</span>/sn</div>
+<div class="stats-card">
+    <span class="coin-val">🪙 <span id="coin-txt">0</span></span>
+    <div class="happiness-box">
+        <span>HALKIN MUTLULUĞU:</span>
+        <div class="happy-bar-bg"><div id="happy-fill"></div></div>
+        <span id="happy-pct">%100</span>
+    </div>
 </div>
 
-<div id="city-evolution" onclick="handleTap(event)">
+<div id="main-city" onclick="handleTap(event)">
     <img id="city-img" src="https://cdn-icons-png.flaticon.com/512/619/619153.png">
 </div>
 
-<div class="bars-container">
-    <span class="progress-label">⚡ REZERV ENERJİ: <span id="en-num">1000</span></span>
-    <div class="progress-bg"><div id="energy-fill"></div></div>
-    <span class="progress-label">📈 ŞEHİR PRESTİJİ (XP)</span>
-    <div class="progress-bg"><div id="xp-fill"></div></div>
+<div class="resource-section">
+    <span class="p-label">⚡ ENERJİ: <span id="en-txt">1000</span></span>
+    <div class="p-bar-bg"><div id="en-fill"></div></div>
+    <span class="p-label">📈 PRESTİJ (XP)</span>
+    <div class="p-bar-bg"><div id="xp-fill"></div></div>
 </div>
 
-<div class="action-bar">
-    <div class="action-item" onclick="openMaya('Yatırım menüsü çok yakında! Şimdilik tıkla başkan!')">🏗️ İNŞA</div>
-    <div class="action-item raid" onclick="startRaid()">⚔️ AKIN YAP</div>
-    <div class="action-item" onclick="claimDaily()">🎁 BONUS</div>
-    <div class="action-item" onclick="openMaya('Küresel pazar Lv. 5\'te açılacak!')">💰 MARKET</div>
+<div class="policy-grid">
+    <div class="policy-btn tax" onclick="changeTax()">💰 VERGİLERİ ARTIR<br>(+Gelir / -Mutluluk)</div>
+    <div class="policy-btn festival" onclick="giveFestival()">🎉 FESTİVAL YAP<br>(-Para / +Mutluluk)</div>
+    <div class="policy-btn" onclick="openMaya('Diplomasi yakında!')">🤝 DİPLOMASİ</div>
+    <div class="policy-btn" onclick="claimBonus()">🎁 GÜNLÜK DESTEK</div>
 </div>
 
 <div id="maya-modal" class="modal">
-    <img src="assets/maya.png" class="maya-pic" onerror="this.src='https://i.ibb.co/v4S8W5p/maya-cartoon.png'">
-    <div id="maya-text" class="speech">Hoş geldiniz Başkanım! Şehrimiz için yeni bir gün başlıyor.</div>
-    <button class="confirm-btn" onclick="closeMaya()">TAMAMDIR</button>
+    <img src="assets/maya.png" class="maya-ava" onerror="this.src='https://i.ibb.co/v4S8W5p/maya-cartoon.png'">
+    <div id="maya-msg" class="msg-box">Hoş geldiniz Başkanım!</div>
+    <button class="modal-btn" onclick="closeMaya()">EMRET!</button>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let state = JSON.parse(localStorage.getItem('mcity_empire_v1')) || {
-        coins: 0, energy: 1000, pps: 0, lv: 1, xp: 0, nextXp: 500, lastDaily: 0
+    let db = JSON.parse(localStorage.getItem('mcity_final_v10')) || {
+        coins: 0, energy: 1000, pps: 2, lv: 1, xp: 0, nextXp: 500, happy: 100, lastDaily: 0
     };
 
     function update() {
-        document.getElementById('coin-val').innerText = Math.floor(state.coins).toLocaleString();
-        document.getElementById('pps-val').innerText = state.pps.toFixed(1);
-        document.getElementById('en-num').innerText = Math.floor(state.energy);
-        document.getElementById('energy-fill').style.width = (state.energy / 10) + "%";
-        document.getElementById('xp-fill').style.width = (state.xp / state.nextXp * 100) + "%";
-        document.getElementById('user-lv').innerText = "Lv. " + state.lv;
+        document.getElementById('coin-txt').innerText = Math.floor(db.coins).toLocaleString();
+        document.getElementById('en-txt').innerText = Math.floor(db.energy);
+        document.getElementById('en-fill').style.width = (db.energy / 10) + "%";
+        document.getElementById('xp-fill').style.width = (db.xp / db.nextXp * 100) + "%";
+        document.getElementById('u-lv').innerText = "Lv. " + db.lv;
         
-        // Görsel Evrim Senaryosu
-        const img = document.getElementById('city-img');
-        if(state.lv >= 5) {
-            img.src = "https://cdn-icons-png.flaticon.com/512/2099/2099143.png"; // Modern Bina
-            document.getElementById('user-rank').innerText = "🏢 ŞEHİR PLANLAMACI";
-        }
-        if(state.lv >= 10) {
-            img.src = "https://cdn-icons-png.flaticon.com/512/2942/2942581.png"; // Gökdelen/Saray
-            document.getElementById('user-rank').innerText = "💎 İMPARATORLUK BAŞKANI";
+        // Mutluluk Kontrolü
+        document.getElementById('happy-fill').style.width = db.happy + "%";
+        document.getElementById('happy-pct').innerText = "%" + Math.floor(db.happy);
+        if(db.happy < 30) {
+            document.getElementById('happy-fill').style.backgroundColor = "red";
+            if(Math.random() < 0.01) startRevolt();
+        } else {
+            document.getElementById('happy-fill').style.backgroundColor = "var(--m-green)";
         }
 
-        localStorage.setItem('mcity_empire_v1', JSON.stringify(state));
+        localStorage.setItem('mcity_final_v10', JSON.stringify(db));
     }
 
     function handleTap(e) {
-        if (state.energy >= 1) {
-            let gain = 1 + Math.floor(state.lv / 2);
-            state.coins += gain;
-            state.energy -= 1;
-            state.xp += 10;
-            if (state.xp >= state.nextXp) levelUp();
-            showEffect(e.clientX, e.clientY, "+" + gain);
+        if (db.energy >= 1) {
+            db.coins += (1 + Math.floor(db.lv / 2));
+            db.energy -= 1;
+            db.xp += 8;
+            if (db.xp >= db.nextXp) levelUp();
             update();
-            tg.HapticFeedback.impactOccurred('medium');
+            tg.HapticFeedback.impactOccurred('light');
         } else {
-            openMaya("Başkanım enerji tükendi, halkın dinlenmesi gerekiyor!");
+            openMaya("Başkanım enerji bitti, halkın dinlenmesi lazım!");
         }
     }
 
     function levelUp() {
-        state.lv++;
-        state.xp = 0;
-        state.nextXp *= 2.5;
-        state.energy = 1000;
-        openMaya("MUHTEŞEM! Şehrimiz seviye atladı. Mimari yapımız gelişiyor!");
+        db.lv++;
+        db.xp = 0; db.nextXp *= 2.2; db.energy = 1000;
+        openMaya("Şehrimiz büyüdü başkanım! Ama halkın beklentileri de arttı.");
     }
 
-    function startRaid() {
-        if(state.coins < 100) return openMaya("Akın yapmak için en az 100 M-Coin lazım!");
-        let success = Math.random() > 0.5;
-        if(success) {
-            let loot = Math.floor(state.coins * 0.15) + 50;
-            state.coins += loot;
-            openMaya("ZAFER! Başka bir şehirden " + loot + " M-Coin ganimet topladık!");
-        } else {
-            let loss = 100;
-            state.coins -= loss;
-            openMaya("BOZGUN! Akın başarısız oldu, " + loss + " M-Coin kaybettik.");
-        }
+    function changeTax() {
+        db.pps += 5;
+        db.happy -= 10;
+        openMaya("Vergileri artırdık başkanım. Kasamız doluyor ama halk homurdanıyor...");
         update();
     }
 
-    function claimDaily() {
+    function giveFestival() {
+        if(db.coins < 500) return openMaya("Festival için 500 coin lazım başkanım!");
+        db.coins -= 500;
+        db.happy = Math.min(100, db.happy + 20);
+        openMaya("Muhteşem bir festival! Halkın size olan sevgisi tavan yaptı.");
+        update();
+    }
+
+    function startRevolt() {
+        db.coins = Math.floor(db.coins * 0.8);
+        db.happy = 50;
+        openMaya("EYVAH! Halk isyan etti! Hazine yağmalandı ve düzen zor sağlandı.");
+        update();
+    }
+
+    function claimBonus() {
         let now = Date.now();
-        if(now - state.lastDaily > 86400000) { // 24 Saat
-            state.coins += 500;
-            state.lastDaily = now;
-            openMaya("Günlük bütçe desteği geldi: +500 M-Coin!");
-            update();
-        } else {
-            openMaya("Başkanım, yeni bütçe yarın sabah gelecek.");
-        }
+        if(now - db.lastDaily > 86400000) {
+            db.coins += 1000; db.lastDaily = now;
+            openMaya("Günlük bütçe onaylandı: +1000 M-Coin!");
+        } else { openMaya("Başkanım henüz yeni bütçe dönemi gelmedi."); }
     }
 
     function openMaya(m) {
-        document.getElementById('maya-text').innerText = m;
+        document.getElementById('maya-msg').innerText = m;
         document.getElementById('maya-modal').classList.add('active');
     }
-
-    function closeMaya() {
-        document.getElementById('maya-modal').classList.remove('active');
-    }
-
-    function showEffect(x, y, t) {
-        const div = document.createElement('div');
-        div.className = 'floating';
-        div.style.left = x + 'px'; div.style.top = y + 'px';
-        div.innerText = t;
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 700);
-    }
+    function closeMaya() { document.getElementById('maya-modal').classList.remove('active'); }
 
     setInterval(() => {
-        state.coins += (state.pps / 10);
-        if (state.energy < 1000) state.energy += 0.5;
+        // Mutluluk geliri etkiler: Mutsuz halk çalışmaz!
+        let efficiency = db.happy / 100;
+        db.coins += (db.pps * efficiency / 10);
+        
+        if (db.energy < 1000) db.energy += 0.6;
+        // Zamanla mutluluk yavaşça düşer (Doğal aşınma)
+        if (db.happy > 10) db.happy -= 0.01;
         update();
     }, 100);
 
