@@ -7,118 +7,100 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root { --m-red: #e31b23; --m-green: #00a650; --m-blue: #008dce; --bg: #f0e6d2; }
-        body { font-family: 'Arial Black', sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; overflow: hidden; }
+        body { font-family: 'Arial Black', sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; overflow: hidden; height: 100vh; }
 
-        /* Üst Durum Paneli */
-        .top-nav { background: var(--m-red); color: white; padding: 12px; display: flex; justify-content: space-between; border-bottom: 5px solid #333; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        /* Üst Panel */
+        .header { background: var(--m-red); color: white; padding: 12px; display: flex; justify-content: space-between; border-bottom: 5px solid #333; font-size: 14px; }
 
         /* Para Bölmesi */
-        .wallet { background: white; border: 4px solid #333; margin: 15px auto; width: 85%; padding: 15px; border-radius: 12px; text-align: center; box-shadow: 6px 6px 0px #333; position: relative; }
-        .coin-val { font-size: 36px; color: var(--m-green); font-weight: bold; }
+        .wallet { background: white; border: 4px solid #333; margin: 10px auto; width: 85%; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 4px 4px 0px #333; }
+        .coin-val { font-size: 32px; color: var(--m-green); font-weight: bold; }
 
-        /* Belediye Binası */
-        #main-city { width: 200px; height: 200px; background: white; border: 8px solid #333; margin: 20px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; z-index: 5; transition: transform 0.05s; }
-        #main-city:active { transform: scale(0.92); }
-        #main-city img { width: 130px; }
+        /* Tıklama Alanı */
+        #city-btn { width: 180px; height: 180px; background: white; border: 8px solid #333; margin: 10px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.05s; z-index: 5; position: relative; }
+        #city-btn:active { transform: scale(0.92); }
+        #city-btn img { width: 110px; }
 
-        /* Enerji Sistemi */
-        .energy-container { width: 85%; height: 22px; background: #333; margin: 0 auto; border-radius: 11px; overflow: hidden; border: 2px solid #333; }
-        #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #fff200, #ffcc00); transition: width 0.3s; }
+        /* Enerji */
+        .energy-box { width: 85%; height: 18px; background: #333; margin: 5px auto; border-radius: 9px; overflow: hidden; border: 2px solid #333; }
+        #energy-bar { width: 100%; height: 100%; background: #fff200; transition: width 0.3s; }
 
-        /* SEKRETER MAYA - GÖRSEL ENTEGRASYONU */
-        #maya-container {
+        /* --- MAYA SİSTEMİ (DÜZELTİLDİ) --- */
+        #maya-area {
             position: fixed;
-            bottom: -5px;
-            right: -10px;
-            width: 170px;
+            bottom: 0;
+            right: 0;
+            width: 150px; /* Boyut küçültüldü ki butonu kapatmasın */
             z-index: 100;
-            cursor: pointer;
-            pointer-events: auto;
         }
         #maya-img {
             width: 100%;
             display: block;
-            filter: drop-shadow(4px 4px 8px rgba(0,0,0,0.2));
+            /* Resim yüklenmezse diye arka plan rengi ekledik */
+            min-height: 100px;
         }
-
-        /* Maya'nın Konuşma Balonu */
         #maya-bubble { 
             position: fixed; 
-            bottom: 180px; 
+            bottom: 160px; /* Maya'nın üstünde dursun */
             right: 20px; 
             left: 20px; 
             background: white; 
             border: 4px solid #333; 
-            padding: 15px; 
-            border-radius: 20px; 
+            padding: 12px; 
+            border-radius: 15px; 
             font-weight: bold; 
-            font-size: 14px; 
-            box-shadow: 6px 6px 0px #333; 
+            font-size: 13px; 
+            box-shadow: 5px 5px 0px #333; 
             display: none; 
             z-index: 101;
             text-align: center;
         }
-        #maya-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: -15px;
-            right: 40px;
-            border-width: 15px 15px 0;
-            border-style: solid;
-            border-color: #333 transparent;
-            display: block;
-            width: 0;
-        }
+        /* -------------------------------- */
 
-        /* Butonlar */
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
-        .btn { background: var(--m-blue); color: white; border: 3px solid #333; padding: 12px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; text-align: center; box-shadow: 4px 4px 0 #333; }
-        .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #333; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 15px; }
+        .btn { background: var(--m-blue); color: white; border: 3px solid #333; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="top-nav">
-    <div id="rank">GENÇ BAŞKAN</div>
-    <div id="lv">Lv. 1</div>
+<div class="header">
+    <div id="lv">Lv. 1 BAŞKAN</div>
 </div>
 
 <div class="wallet">
-    <div style="font-size: 12px; font-weight: bold; letter-spacing: 1px;">HAZİNE KAPASİTESİ</div>
     <div class="coin-val">🪙 <span id="coins">0</span></div>
 </div>
 
-<div id="main-city" onclick="handleTap(event)">
-    <img src="https://cdn-icons-png.flaticon.com/512/619/619153.png" alt="Belediye">
+<div id="city-btn" onclick="handleTap(event)">
+    <img src="https://cdn-icons-png.flaticon.com/512/619/619153.png" alt="City">
 </div>
 
-<div style="text-align:center; font-weight:bold; font-size:12px; margin-bottom:5px; color:#333;">⚡ ENERJİ REZERVI: <span id="en-num">1000</span></div>
-<div class="energy-container"><div id="energy-fill"></div></div>
+<div style="text-align:center; font-weight:bold; font-size:11px; margin-bottom:2px;">⚡ ENERJİ: <span id="en-num">1000</span></div>
+<div class="energy-box"><div id="energy-bar"></div></div>
 
 <div class="grid">
-    <div class="btn" onclick="buyAsset('bakery', 100, 2)">🏪 FIRIN AÇ<br>100 🪙 (+2/sn)</div>
-    <div class="btn" style="background:var(--m-green)" onclick="mayaTalk('Henüz savaş için çok küçüğüz başkanım! Önce binaları dikelim.')">⚔️ DİPLOMASİ</div>
+    <div class="btn" onclick="buyAsset(100, 2)">🏪 FIRIN AÇ<br>100 🪙 (+2/sn)</div>
+    <div class="btn" style="background:var(--m-green)" onclick="mayaTalk('Halk sizi izliyor başkanım!')">⚔️ DİPLOMASİ</div>
 </div>
 
 <div id="maya-bubble"></div>
-<div id="maya-container" onclick="mayaTalk()">
-    <img id="maya-img" src="assets/maya.png" alt="Sekreter Maya">
+<div id="maya-area" onclick="mayaTalk()">
+    <img id="maya-img" src="assets/maya.png" onerror="this.src='https://i.ibb.co/v4S8W5p/maya-cartoon.png'" alt="Maya">
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let state = JSON.parse(localStorage.getItem('m_city_v4')) || {
-        coins: 0, energy: 1000, pps: 0, lv: 1, xp: 0
+    let state = JSON.parse(localStorage.getItem('m_city_v5')) || {
+        coins: 0, energy: 1000, pps: 0, lv: 1
     };
 
     function updateUI() {
         document.getElementById('coins').innerText = Math.floor(state.coins);
         document.getElementById('en-num').innerText = Math.floor(state.energy);
-        document.getElementById('energy-fill').style.width = (state.energy / 10) + "%";
-        document.getElementById('lv').innerText = "Lv. " + state.lv;
-        localStorage.setItem('m_city_v4', JSON.stringify(state));
+        document.getElementById('energy-bar').style.width = (state.energy / 10) + "%";
+        localStorage.setItem('m_city_v5', JSON.stringify(state));
     }
 
     function handleTap(e) {
@@ -127,55 +109,38 @@
             state.energy -= 1;
             updateUI();
             tg.HapticFeedback.impactOccurred('medium');
-            
-            // Rastgele Maya etkileşimi
-            if (Math.random() < 0.05) mayaTalk("Harika gidiyoruz başkanım, tıklar tıklar M-Coinler!");
         } else {
-            tg.HapticFeedback.notificationOccurred('error');
-            mayaTalk("Başkanım enerji bitti, biraz dinlenmelisiniz!");
+            mayaTalk("Başkanım enerji bitti, biraz bekleyelim.");
         }
     }
 
-    function buyAsset(type, cost, income) {
+    function buyAsset(cost, inc) {
         if (state.coins >= cost) {
             state.coins -= cost;
-            state.pps += income;
-            mayaTalk("Hayırlı olsun başkanım! İlk yatırımımızı yaptık.");
+            state.pps += inc;
+            mayaTalk("Şehrimiz büyüyor başkanım!");
             updateUI();
         } else {
-            mayaTalk("Maalesef kasada yeterli M-Coin yok...");
+            mayaTalk("Kasamızda yeterli M-Coin yok...");
         }
     }
 
     function mayaTalk(msg) {
         const bubble = document.getElementById('maya-bubble');
-        const defaultQuotes = [
-            "Şehrimiz yakında bir metropol olacak!",
-            "Unutmayın, her tık bir tuğla demektir.",
-            "Bütçemizi dikkatli yönetmeliyiz başkanım.",
-            "Halk sizi çok seviyor!"
-        ];
-        
-        bubble.innerText = msg || defaultQuotes[Math.floor(Math.random() * defaultQuotes.length)];
+        bubble.innerText = msg || "Buyurun başkanım, emrinizdeyim!";
         bubble.style.display = 'block';
-        
-        // 4 saniye sonra balonu kapat
-        setTimeout(() => { bubble.style.display = 'none'; }, 4000);
+        setTimeout(() => { bubble.style.display = 'none'; }, 3000);
     }
 
-    // Pasif Gelir ve Enerji Otomasyonu
     setInterval(() => {
         state.coins += (state.pps / 10);
-        if (state.energy < 1000) state.energy += 0.8;
+        if (state.energy < 1000) state.energy += 1;
         updateUI();
     }, 100);
 
-    // İlk Giriş Mesajı
     window.onload = () => {
         updateUI();
-        setTimeout(() => {
-            mayaTalk("Hoş geldiniz Sayın Başkan! Ben Maya. Şehrimizi beraber ayağa kaldırmaya hazır mısınız?");
-        }, 800);
+        setTimeout(() => mayaTalk("Hoş geldiniz başkanım!"), 500);
     };
 </script>
 </body>
