@@ -1,0 +1,29 @@
+<div id="upgrade-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#161b22; border:2px solid #00c4cc; padding:20px; border-radius:15px; z-index:1000; width:80%;">
+    <h3>🛠 Geliştirmeler</h3>
+    <button onclick="buyUpgrade('tap')" class="nav-button">Tık Gücü Artır (1000 💰)</button>
+    <button onclick="document.getElementById('upgrade-modal').style.display='none'" style="margin-top:10px; background:red; border:none; color:white; padding:5px 10px; border-radius:5px;">Kapat</button>
+</div>
+
+<script>
+    // Menü geçişleri için basit fonksiyonlar
+    function openMenu(menuName) {
+        if(menuName === 'upgrade') {
+            document.getElementById('upgrade-modal').style.display = 'block';
+        } else if(menuName === 'friends') {
+            tg.showAlert("Arkadaş Sistemi: Yakında! Davet linkini paylaşarak kazanacaksın.");
+        } else if(menuName === 'tasks') {
+            tg.showAlert("Görevler: Kanalımızı takip et +50,000 💰");
+        }
+    }
+
+    function buyUpgrade(type) {
+        if (score >= 1000) {
+            score -= 1000;
+            // Tıklama gücünü artırma mantığı buraya gelir
+            tg.showConfirm("Geliştirme satın alındı!");
+            updateUI();
+        } else {
+            tg.showAlert("Yetersiz çip!");
+        }
+    }
+</script>
