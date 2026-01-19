@@ -3,319 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Coin City: Final Empire</title>
+    <title>M-Coin City: Strategy</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --m-red: #E31B23; --m-green: #00A650; --m-blue: #008DCE;
-            --m-gold: #FFD700; --space-bg: #0B0D17;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--space-bg);
-            color: white;
-            margin: 0; padding: 0;
-            user-select: none;
-            overflow: hidden;
-            height: 100vh;
-        }
+        :root { --m-brown: #5d4037; --m-green: #2e7d32; --m-gold: #fbc02d; --bg: #e0e0e0; }
+        body { font-family: 'Tahoma', sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; color: #333; }
 
-        /* --- UI PANELS --- */
-        .header {
-            background: var(--m-red);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 4px solid #000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        /* Üst Hammadde Paneli */
+        .resource-bar {
+            background: #3e2723; color: #fff;
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            padding: 8px; border-bottom: 3px solid #000; font-size: 11px; text-align: center;
+        }
+        .res-item b { display: block; color: var(--m-gold); }
+
+        /* Köy Görünümü */
+        .village-view {
+            width: 95%; height: 220px; background: #81c784; margin: 10px auto;
+            border: 4px solid #5d4037; border-radius: 15px; position: relative;
+            background-image: radial-gradient(#66bb6a 20%, transparent 20%), radial-gradient(#66bb6a 20%, transparent 20%);
+            background-size: 40px 40px;
         }
 
-        .stats-container {
-            background: white;
-            color: #333;
-            margin: 10px auto;
-            width: 90%;
-            border-radius: 15px;
-            padding: 15px;
-            text-align: center;
-            border: 4px solid #333;
-            box-shadow: 6px 6px 0px var(--m-blue);
+        /* Bina Slotları */
+        .building-slot {
+            position: absolute; width: 50px; height: 50px;
+            background: rgba(255,255,255,0.7); border: 2px dashed #5d4037;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; cursor: pointer; font-weight: bold;
+        }
+        .slot1 { top: 20px; left: 30px; }
+        .slot2 { top: 20px; right: 30px; }
+        .slot3 { bottom: 20px; left: 30px; }
+        .slot4 { bottom: 20px; right: 30px; }
+        .built { background: white; border-style: solid; box-shadow: 0 4px 0 #5d4037; }
+
+        /* İnşaat Listesi */
+        .build-queue {
+            background: #fff; margin: 10px; padding: 10px; border: 2px solid #333;
+            border-radius: 8px; font-size: 12px; display: none;
         }
 
-        .coin-val { font-size: 36px; font-weight: 900; color: var(--m-green); }
-        .sub-stat { font-size: 12px; font-weight: bold; color: #666; }
-
-        /* --- THE CITY CORE (CLICKER) --- */
-        .city-wrapper {
-            position: relative;
-            width: 220px;
-            height: 220px;
-            margin: 20px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
+        /* Sekmeler (Tablar) */
+        .tabs {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            padding: 10px; gap: 5px; background: #d7ccc8;
+        }
+        .tab-btn {
+            background: #5d4037; color: white; border: none; padding: 10px;
+            border-radius: 5px; font-weight: bold; font-size: 11px;
         }
 
-        #city-visual {
-            font-size: 140px;
-            transition: transform 0.1s;
-            filter: drop-shadow(0 0 20px var(--m-blue));
+        /* Maya Modal */
+        #modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000;
         }
-
-        .city-wrapper:active #city-visual { transform: scale(0.9); }
-
-        /* --- PROGRESS BARS --- */
-        .bars-area { padding: 0 25px; }
-        .bar-label { font-size: 10px; font-weight: bold; color: var(--m-gold); margin-bottom: 4px; display: block; }
-        .bar-bg { width: 100%; height: 16px; background: #222; border-radius: 8px; border: 2px solid #444; overflow: hidden; margin-bottom: 10px; }
-        #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #FFD700, #FFA500); }
-        #rocket-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #00C8FF, #008DCE); transition: width 0.4s; }
-
-        /* --- ACTION GRID --- */
-        .actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            padding: 15px;
-            background: rgba(255,255,255,0.05);
-            border-top: 2px solid #333;
+        .modal-content {
+            background: #f5f5f5; width: 85%; padding: 20px; border-radius: 15px;
+            border: 4px solid #5d4037; text-align: center;
         }
-
-        .btn {
-            background: white;
-            color: #333;
-            border: 3px solid #333;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 900;
-            text-align: center;
-            box-shadow: 4px 4px 0px #000;
-        }
-        .btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #000; }
-        .btn.blue { background: #E3F2FD; color: var(--m-blue); }
-
-        /* --- MAYA BRIEFING SYSTEM --- */
-        #maya-modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 10000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: 0.5s;
-        }
-        #maya-modal.active { display: flex; }
-
-        .maya-avatar {
-            width: 150px;
-            height: 150px;
-            background: white;
-            border-radius: 50%;
-            border: 5px solid var(--m-gold);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 100px;
-            box-shadow: 0 0 30px var(--m-gold);
-        }
-
-        .speech-bubble {
-            background: white;
-            color: #333;
-            border: 4px solid #333;
-            padding: 20px;
-            border-radius: 20px;
-            width: 80%;
-            margin-top: 20px;
-            font-weight: bold;
-            text-align: center;
-            box-shadow: 8px 8px 0px var(--m-red);
-        }
-
-        .maya-btn {
-            margin-top: 25px;
-            background: var(--m-gold);
-            border: 3px solid #333;
-            padding: 12px 40px;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* --- ANIMATIONS --- */
-        .float-text {
-            position: absolute;
-            font-weight: bold;
-            color: var(--m-gold);
-            animation: riseUp 0.6s forwards;
-            pointer-events: none;
-        }
-        @keyframes riseUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
 
-<div id="maya-modal">
-    <div class="maya-avatar">👩‍💼</div>
-    <div id="maya-text" class="speech-bubble">...</div>
-    <button class="maya-btn" onclick="closeMaya()">EMREDERSİN BAŞKANIM!</button>
+<div class="resource-bar">
+    <div class="res-item"><b>🪵 Odun</b><span id="res-wood">0</span></div>
+    <div class="res-item"><b>🧱 Tuğla</b><span id="res-clay">0</span></div>
+    <div class="res-item"><b>⛓️ Demir</b><span id="res-iron">0</span></div>
+    <div class="res-item"><b>🌾 Tahıl</b><span id="res-crop">0</span></div>
 </div>
 
-<div class="header">
-    <div id="rank-title" style="font-weight: 900;">🌌 GALAKTİK İMPARATOR</div>
-    <div id="level-display" style="background:white; color:black; padding:2px 8px; border-radius:5px; font-weight:bold;">Lv. 1</div>
+<div style="padding: 10px; font-size: 12px; font-weight: bold;">
+    🏛️ Şehir: <span id="village-name">Yeni Köy</span> | 👨‍👩‍👧‍👦 Nüfus: <span id="pop">10</span>
 </div>
 
-<div class="stats-container">
-    <div class="coin-val">🪙 <span id="coins">0</span></div>
-    <div class="sub-stat">BORSA DEĞERİ: <span id="mcoin-value">1.00</span> USD</div>
+<div class="village-view">
+    <div id="slot-1" class="building-slot slot1" onclick="openBuild(1)">+</div>
+    <div id="slot-2" class="building-slot slot2" onclick="openBuild(2)">+</div>
+    <div id="slot-3" class="building-slot slot3" onclick="openBuild(3)">+</div>
+    <div id="slot-4" class="building-slot slot4" onclick="openBuild(4)">+</div>
 </div>
 
-<div class="city-wrapper" onclick="handleTap(event)">
-    <div id="city-visual">🏛️</div>
+<div id="queue" class="build-queue">
+    🏗️ İnşaat devam ediyor: <span id="timer">0</span>sn
 </div>
 
-<div class="bars-area">
-    <span class="bar-label">⚡ REZERV GÜCÜ: <span id="en-num">1000</span></span>
-    <div class="bar-bg"><div id="energy-fill"></div></div>
-    
-    <span class="bar-label">🚀 AY GÖREVİ (ROKET YAKITI)</span>
-    <div class="bar-bg"><div id="rocket-fill"></div></div>
+<div class="tabs">
+    <button class="tab-btn" onclick="openMaya('Köyünüzün genel durumu iyi başkanım.')">📜 GENEL</button>
+    <button class="tab-btn" onclick="openMaya('Kışla Lv. 3 olduğunda asker basabilirsiniz.')">⚔️ ASKERİ</button>
+    <button class="tab-btn" onclick="location.reload()">🔄 YENİLE</button>
 </div>
 
-<div class="actions">
-    <div class="btn" onclick="buyAsset(500, 10)">🏦 MERKEZ BANKASI<br>(+10 PPS / 500 🪙)</div>
-    <div class="btn blue" onclick="launchRocket()">🚀 ROKETİ FIRLAT<br>(Kârı Katla!)</div>
-    <div class="btn" onclick="tradeBonds()">📉 BORSA İŞLEMİ<br>(Risk Al)</div>
-    <div class="btn" onclick="claimDaily()">🎁 GÜNLÜK HİBE</div>
+<div id="modal">
+    <div class="modal-content">
+        <h3 id="modal-title">Bina İnşa Et</h3>
+        <div id="build-options">
+            <div style="border-bottom: 1px solid #ccc; padding: 10px;">
+                <b>🪵 Odun Kesici</b><br>
+                Maliyet: 40🪵 30🧱 20⛓️<br>
+                <button onclick="startBuild('Odun Kesici', 40, 30, 20)">İnşa Et (30sn)</button>
+            </div>
+            <div style="border-bottom: 1px solid #ccc; padding: 10px;">
+                <b>🏢 Merkez Binası</b><br>
+                Maliyet: 80🪵 70🧱 60⛓️<br>
+                <button onclick="startBuild('Merkez Binası', 80, 70, 60)">İnşa Et (60sn)</button>
+            </div>
+        </div>
+        <br>
+        <button onclick="closeModal()" style="background:red; color:white; border:none; padding:5px 15px; border-radius:5px;">Vazgeç</button>
+    </div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let state = JSON.parse(localStorage.getItem('mcity_final_safe')) || {
-        coins: 0, pps: 0, energy: 1000, lv: 1, xp: 0, nextXp: 1000,
-        rocket: 0, val: 1.0, lastDaily: 0, first: true
+    let state = JSON.parse(localStorage.getItem('mcity_travian_v1')) || {
+        res: { wood: 100, clay: 100, iron: 100, crop: 100 },
+        prod: { wood: 1, clay: 1, iron: 1, crop: 1 },
+        slots: { 1: null, 2: null, 3: null, 4: null },
+        pop: 10,
+        isBuilding: false,
+        buildTime: 0
     };
+
+    let selectedSlot = null;
 
     function updateUI() {
-        document.getElementById('coins').innerText = Math.floor(state.coins).toLocaleString();
-        document.getElementById('mcoin-value').innerText = state.val.toFixed(2);
-        document.getElementById('en-num').innerText = Math.floor(state.energy);
-        document.getElementById('energy-fill').style.width = (state.energy / 10) + "%";
-        document.getElementById('rocket-fill').style.width = state.rocket + "%";
-        document.getElementById('level-display').innerText = "Lv. " + state.lv;
-        
-        // Şehir Evrimi (Emoji Değişimi)
-        const city = document.getElementById('city-visual');
-        if(state.lv < 5) city.innerText = "🏛️";
-        else if(state.lv < 10) city.innerText = "🏢";
-        else if(state.lv < 20) city.innerText = "🏙️";
-        else city.innerText = "🚀";
+        document.getElementById('res-wood').innerText = Math.floor(state.res.wood);
+        document.getElementById('res-clay').innerText = Math.floor(state.res.clay);
+        document.getElementById('res-iron').innerText = Math.floor(state.res.iron);
+        document.getElementById('res-crop').innerText = Math.floor(state.res.crop);
+        document.getElementById('pop').innerText = state.pop;
 
-        localStorage.setItem('mcity_final_safe', JSON.stringify(state));
-    }
-
-    function handleTap(e) {
-        if (state.energy >= 1) {
-            let gain = (1 + Math.floor(state.lv / 2)) * state.val;
-            state.coins += gain;
-            state.energy -= 1;
-            state.xp += 10;
-            state.rocket = Math.min(100, state.rocket + 0.2);
-            if (state.xp >= state.nextXp) levelUp();
-            showFloat(e.clientX, e.clientY, "+" + gain.toFixed(1));
-            updateUI();
-            tg.HapticFeedback.impactOccurred('medium');
-        } else {
-            openMaya("Başkanım enerji tükendi, sistemlerin şarj olmasını bekleyelim!");
+        for (let i = 1; i <= 4; i++) {
+            let s = document.getElementById('slot-' + i);
+            if (state.slots[i]) {
+                s.innerText = state.slots[i].charAt(0);
+                s.classList.add('built');
+            }
         }
+
+        if (state.isBuilding) {
+            document.getElementById('queue').style.display = 'block';
+            document.getElementById('timer').innerText = state.buildTime;
+        } else {
+            document.getElementById('queue').style.display = 'none';
+        }
+        localStorage.setItem('mcity_travian_v1', JSON.stringify(state));
     }
 
-    function levelUp() {
-        state.lv++; state.xp = 0; state.nextXp *= 2; state.energy = 1000;
-        openMaya("TEBRİKLER! Seviye atladık başkanım. İmparatorluğumuz genişliyor.");
+    function openBuild(slot) {
+        if (state.isBuilding) { tg.showAlert("Aynı anda sadece bir inşaat yapabilirsiniz!"); return; }
+        if (state.slots[slot]) { tg.showAlert("Bu slotta zaten " + state.slots[slot] + " var!"); return; }
+        selectedSlot = slot;
+        document.getElementById('modal').style.display = 'flex';
     }
 
-    function buyAsset(cost, pps) {
-        if (state.coins >= cost) {
-            state.coins -= cost;
-            state.pps += pps;
-            openMaya("Yeni bir finansal merkez kuruldu. Gelirimiz artıyor!");
+    function startBuild(name, w, c, i) {
+        if (state.res.wood >= w && state.res.clay >= c && state.res.iron >= i) {
+            state.res.wood -= w; state.res.clay -= c; state.res.iron -= i;
+            state.isBuilding = true;
+            state.buildTime = name === 'Odun Kesici' ? 30 : 60;
+            state.currentBuildingName = name;
+            state.currentSlot = selectedSlot;
+            closeModal();
             updateUI();
         } else {
-            openMaya("Başkanım bütçemiz yetersiz, biraz daha M-Coin basalım.");
+            tg.showAlert("Yetersiz hammadde!");
         }
     }
 
-    function launchRocket() {
-        if(state.rocket < 100) return openMaya("Yakıt henüz %100 değil başkanım!");
-        state.rocket = 0;
-        state.val += 0.5;
-        openMaya("ROKET AY'A ULAŞTI! M-Coin değeri fırladı!");
-        updateUI();
-    }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
 
-    function tradeBonds() {
-        let win = Math.random() > 0.45;
-        if(win) {
-            let winAmt = state.coins * 0.2;
-            state.coins += winAmt;
-            openMaya("Borsa operasyonu başarılı! +" + Math.floor(winAmt) + " M-Coin.");
-        } else {
-            state.coins *= 0.8;
-            openMaya("Borsada spekülasyon kurbanı olduk, bir miktar kaybettik.");
-        }
-        updateUI();
-    }
+    function openMaya(msg) { tg.showAlert("Maya: " + msg); }
 
-    function claimDaily() {
-        let now = Date.now();
-        if(now - state.lastDaily > 86400000) {
-            state.coins += 2000; state.lastDaily = now;
-            openMaya("Dünya Konseyi'nden yıllık hibe geldi: +2000 M-Coin!");
-        } else { openMaya("Yeni bütçe dönemi henüz başlamadı."); }
-    }
-
-    function openMaya(txt) {
-        document.getElementById('maya-text').innerText = txt;
-        document.getElementById('maya-modal').classList.add('active');
-    }
-
-    function closeMaya() {
-        document.getElementById('maya-modal').classList.remove('active');
-    }
-
-    function showFloat(x, y, t) {
-        const d = document.createElement('div');
-        d.className = 'float-text';
-        d.style.left = x + 'px'; d.style.top = y + 'px';
-        d.innerText = t;
-        document.body.appendChild(d);
-        setTimeout(() => d.remove(), 600);
-    }
-
+    // Üretim ve İnşaat Döngüsü
     setInterval(() => {
-        state.coins += (state.pps * state.val / 10);
-        if (state.energy < 1000) state.energy += 0.8;
-        if (state.val > 0.5) state.val -= 0.001; // Enflasyon
-        updateUI();
-    }, 100);
+        // Hammadde Üretimi
+        state.res.wood += state.prod.wood / 10;
+        state.res.clay += state.prod.clay / 10;
+        state.res.iron += state.prod.iron / 10;
+        state.res.crop += state.prod.crop / 10;
 
-    window.onload = () => {
-        updateUI();
-        if(state.first) {
-            setTimeout(() => openMaya("Hoş geldiniz Sayın İmparator! Ben Maya. Galaktik hakimiyetimiz bugün başlıyor!"), 800);
-            state.first = false;
+        // İnşaat Zamanlayıcısı
+        if (state.isBuilding && state.buildTime > 0) {
+            state.buildTime--;
+            if (state.buildTime <= 0) {
+                state.isBuilding = false;
+                state.slots[state.currentSlot] = state.currentBuildingName;
+                state.pop += 5;
+                if(state.currentBuildingName === 'Odun Kesici') state.prod.wood += 5;
+                tg.HapticFeedback.notificationOccurred('success');
+            }
         }
-    };
+        updateUI();
+    }, 1000);
+
+    updateUI();
 </script>
 </body>
 </html>
