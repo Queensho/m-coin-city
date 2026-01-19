@@ -6,162 +6,143 @@
     <title>M-Coin City</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --m-red: #E31B23; --m-green: #00A650; --m-blue: #008DCE; --m-yellow: #FFF200; --bg: #F0E6D2; }
-        body { font-family: 'Arial Black', sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; color: #333; overflow-x: hidden; }
-        
+        :root { --m-red: #d32f2f; --m-green: #1f7a31; --m-blue: #0288d1; --bg: #f4f1ea; }
+        body { font-family: 'Arial Rounded MT Bold', sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; overflow-x: hidden; }
+
         /* Üst Panel */
-        .header { background: var(--m-red); color: white; padding: 10px; border-bottom: 4px solid #333; display: flex; justify-content: space-between; font-size: 14px; }
+        .header { background: var(--m-red); color: white; padding: 12px; border-bottom: 5px solid #8b0000; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         
-        .balance-card { background: white; border: 4px solid #333; margin: 15px; padding: 10px; border-radius: 10px; text-align: center; box-shadow: 5px 5px 0px #333; }
-        .coin-val { font-size: 32px; color: var(--m-green); }
+        .balance-card { background: white; border: 3px solid #333; margin: 15px auto; width: 85%; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 5px 5px 0 #333; }
+        .coin-val { font-size: 34px; color: var(--m-green); font-weight: bold; }
 
-        /* Ana Tıklama Alanı */
-        #game-area { position: relative; width: 200px; height: 200px; margin: 20px auto; cursor: pointer; }
-        #city-building { width: 100%; transition: transform 0.1s; }
-        #game-area:active #city-building { transform: scale(0.92); }
+        /* Belediye Binası (Tıklama Alanı) */
+        #city-board { width: 220px; height: 220px; background: white; border: 8px solid #333; border-radius: 50%; margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; z-index: 5; transition: transform 0.05s; }
+        #city-board:active { transform: scale(0.92); }
+        #city-img { width: 140px; }
 
-        /* Maya Görseli */
-        #maya-character {
+        /* SEKRETER MAYA TASARIMI */
+        #maya-container {
             position: fixed;
-            bottom: 0;
+            bottom: -10px;
             right: -20px;
             width: 180px;
-            z-index: 10;
-            pointer-events: none;
+            z-index: 100;
+            cursor: pointer;
             transition: transform 0.3s;
         }
+        #maya-container:hover { transform: scale(1.05); }
+        #maya-img { width: 100%; filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.3)); }
 
-        /* Konuşma Balonu */
-        #dialog {
+        /* Maya'nın Konuşma Balonu */
+        #maya-bubble {
             position: fixed;
-            bottom: 120px;
-            left: 20px;
-            right: 100px;
+            bottom: 150px;
+            right: 120px;
             background: white;
             border: 3px solid #333;
-            padding: 10px;
-            border-radius: 15px;
+            padding: 10px 15px;
+            border-radius: 20px 20px 0 20px;
             font-size: 13px;
             font-weight: bold;
-            z-index: 11;
-            box-shadow: 4px 4px 0px #333;
+            max-width: 150px;
             display: none;
+            z-index: 101;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.2);
         }
 
         /* Barlar */
-        .stats-container { padding: 0 20px; position: relative; z-index: 5; }
-        .bar-bg { width: 100%; height: 18px; background: #333; border-radius: 9px; margin: 5px 0; overflow: hidden; border: 2px solid #333; }
-        #energy-bar { width: 100%; height: 100%; background: var(--m-yellow); transition: width 0.2s; }
-        #xp-bar { width: 0%; height: 100%; background: var(--m-blue); transition: width 0.5s; }
+        .status-container { padding: 0 20px; }
+        .bar-bg { width: 100%; height: 16px; background: #ddd; border-radius: 10px; border: 2px solid #333; margin: 5px 0; overflow: hidden; }
+        #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff9800, #f57c00); transition: width 0.2s; }
 
-        .shop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; position: relative; z-index: 5; }
-        .item { background: white; border: 3px solid #333; padding: 8px; border-radius: 8px; text-align: center; font-size: 11px; }
-        button { background: var(--m-green); color: white; border: 2px solid #333; width: 100%; padding: 5px; margin-top: 5px; font-weight: bold; cursor: pointer; }
-
-        .plus-one { position: absolute; color: var(--m-green); font-weight: bold; animation: fly 0.6s forwards; }
-        @keyframes fly { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        .floating-text { position: absolute; color: var(--m-green); font-weight: bold; animation: floatUp 0.6s forwards; pointer-events: none; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-80px); } }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <span id="rank-text">BAŞKAN YARDIMCISI</span>
-    <span id="lv-text">Lv. 1</span>
-</div>
+    <div class="header">
+        <span id="rank">ÇAYLAK BAŞKAN</span>
+        <span>Lv. 1</span>
+    </div>
 
-<div class="balance-card">
-    <div class="coin-val">🪙 <span id="coin-count">0</span></div>
-    <div style="font-size: 11px;">Gelir: <span id="pps">0</span>/sn</div>
-</div>
+    <div class="balance-card">
+        <div class="coin-val">🪙 <span id="coins">0</span></div>
+        <div style="font-size: 12px; font-weight: bold;">Halk Mutlu! Pasif: <span id="pps">0</span>/sn</div>
+    </div>
 
-<div id="game-area" onclick="tap(event)">
-    <img id="city-building" src="https://cdn-icons-png.flaticon.com/512/619/619153.png">
-</div>
+    <div id="city-board" onclick="handleTap(event)">
+        <img id="city-img" src="https://cdn-icons-png.flaticon.com/512/619/619153.png" alt="City">
+    </div>
 
-<div class="stats-container">
-    <div style="font-size: 10px; font-weight: bold;">⚡ ENERJİ: <span id="en-num">1000</span></div>
-    <div class="bar-bg"><div id="energy-bar"></div></div>
-    <div style="font-size: 10px; font-weight: bold;">📈 ŞEHİR TECRÜBESİ</div>
-    <div class="bar-bg"><div id="xp-bar"></div></div>
-</div>
+    <div class="status-container">
+        <div style="font-size: 12px; font-weight: bold;">⚡ ENERJİ: <span id="en-text">1000</span></div>
+        <div class="bar-bg"><div id="energy-fill"></div></div>
+    </div>
 
-<div class="shop-grid">
-    <div class="item">🍋 LİMONATACI<br>+2/sn<br><button onclick="buy(150, 2, 'Harika! Halk susamıştı.')">150 🪙</button></div>
-    <div class="item">🏪 BAKKAL<br>+8/sn<br><button onclick="buy(800, 8, 'Ekonomi canlanıyor başkanım!')">800 🪙</button></div>
-</div>
+    <div id="maya-bubble">Başkanım, yeni bir bina almanın tam zamanı!</div>
+    <div id="maya-container" onclick="mayaTalk()">
+        <img id="maya-img" src="https://i.ibb.co/v4S8W5p/maya-cartoon.png" alt="Sekreter Maya">
+    </div>
 
-<div id="dialog">Başkanım, şehrimizi büyütmek için belediyeye tıklayın!</div>
-<img id="maya-character" src="https://i.ibb.co/v4S8W5p/maya-cartoon.png" alt="Sekreter Maya">
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
+        let state = JSON.parse(localStorage.getItem('mcity_maya_save')) || {
+            coins: 0, energy: 1000, pps: 0, clickPwr: 1
+        };
 
-    let state = JSON.parse(localStorage.getItem('mcity_final')) || {
-        coins: 0, energy: 1000, maxEn: 1000, xp: 0, nextXp: 500, lv: 1, pps: 0
-    };
-
-    function update() {
-        document.getElementById('coin-count').innerText = Math.floor(state.coins);
-        document.getElementById('pps').innerText = state.pps.toFixed(1);
-        document.getElementById('en-num').innerText = Math.floor(state.energy);
-        document.getElementById('energy-bar').style.width = (state.energy / state.maxEn * 100) + "%";
-        document.getElementById('xp-bar').style.width = (state.xp / state.nextXp * 100) + "%";
-        document.getElementById('lv-text').innerText = "Lv. " + state.lv;
-        localStorage.setItem('mcity_final', JSON.stringify(state));
-    }
-
-    function tap(e) {
-        if (state.energy >= 1) {
-            let gain = 1 + Math.floor(state.lv / 2);
-            state.coins += gain;
-            state.energy -= 1;
-            state.xp += 5;
-            if (state.xp >= state.nextXp) {
-                state.lv++; state.xp = 0; state.nextXp *= 2; state.maxEn += 200; state.energy = state.maxEn;
-                speak("TEBRİKLER! Şehrimiz seviye atladı!");
-            }
-            createFloat(e.clientX, e.clientY, "+" + gain);
-            update();
-            tg.HapticFeedback.impactOccurred('medium');
+        function updateUI() {
+            document.getElementById('coins').innerText = Math.floor(state.coins);
+            document.getElementById('en-text').innerText = Math.floor(state.energy);
+            document.getElementById('energy-fill').style.width = (state.energy / 10) + "%";
+            document.getElementById('pps').innerText = state.pps;
+            localStorage.setItem('mcity_maya_save', JSON.stringify(state));
         }
-    }
 
-    function buy(cost, inc, msg) {
-        if (state.coins >= cost) {
-            state.coins -= cost;
-            state.pps += inc;
-            speak(msg);
-            update();
-        } else { speak("Üzgünüm başkanım, yeterli M-Coin yok."); }
-    }
+        function handleTap(e) {
+            if (state.energy >= 1) {
+                state.coins += state.clickPwr;
+                state.energy -= 1;
+                showEffect(e.clientX, e.clientY, "+" + state.clickPwr);
+                updateUI();
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
 
-    function speak(text) {
-        const d = document.getElementById('dialog');
-        d.innerText = text;
-        d.style.display = 'block';
-        setTimeout(() => { d.style.display = 'none'; }, 3000);
-    }
+        function showEffect(x, y, txt) {
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.style.left = x + 'px'; el.style.top = y + 'px';
+            el.innerText = txt;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 600);
+        }
 
-    function createFloat(x, y, t) {
-        const div = document.createElement('div');
-        div.className = 'plus-one';
-        div.style.left = x + 'px'; div.style.top = y + 'px';
-        div.innerText = t;
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 600);
-    }
+        const mayaQuotes = [
+            "Başkanım, şehrimiz harika görünüyor!",
+            "Tıklamaya devam edin, M-Coinler birikiyor!",
+            "Biraz mola mı verseniz? Enerjiniz doluyor.",
+            "Diğer şehirlere saldırmak için hazır mısınız?",
+            "Bakkal amca selamlarını iletti!"
+        ];
 
-    setInterval(() => {
-        state.coins += (state.pps / 10);
-        if (state.energy < state.maxEn) state.energy += 0.4;
-        update();
-    }, 100);
+        function mayaTalk() {
+            const bubble = document.getElementById('maya-bubble');
+            const randomQuote = mayaQuotes[Math.floor(Math.random() * mayaQuotes.length)];
+            bubble.innerText = randomQuote;
+            bubble.style.display = 'block';
+            setTimeout(() => { bubble.style.display = 'none'; }, 3000);
+        }
 
-    // Başlangıç Karşılaması
-    setTimeout(() => { speak("Hoş geldiniz başkanım! Şehri ayağa kaldıralım."); }, 1000);
+        setInterval(() => {
+            state.coins += (state.pps / 10);
+            if (state.energy < 1000) state.energy += 0.5;
+            updateUI();
+        }, 100);
 
-    update();
-</script>
+        updateUI();
+    </script>
 </body>
 </html>
