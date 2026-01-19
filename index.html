@@ -11,60 +11,77 @@
 
         /* Üst Panel */
         .header { background: var(--m-red); color: white; padding: 12px; display: flex; justify-content: space-between; border-bottom: 5px solid #333; font-size: 14px; }
-
-        /* Para Bölmesi */
         .wallet { background: white; border: 4px solid #333; margin: 10px auto; width: 85%; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 4px 4px 0px #333; }
         .coin-val { font-size: 32px; color: var(--m-green); font-weight: bold; }
 
-        /* Tıklama Alanı */
-        #city-btn { width: 180px; height: 180px; background: white; border: 8px solid #333; margin: 10px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.05s; z-index: 5; position: relative; }
+        /* Ana Tıklama Butonu */
+        #city-btn { width: 180px; height: 180px; background: white; border: 8px solid #333; margin: 20px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.05s; }
         #city-btn:active { transform: scale(0.92); }
         #city-btn img { width: 110px; }
 
-        /* Enerji */
-        .energy-box { width: 85%; height: 18px; background: #333; margin: 5px auto; border-radius: 9px; overflow: hidden; border: 2px solid #333; }
-        #energy-bar { width: 100%; height: 100%; background: #fff200; transition: width 0.3s; }
-
-        /* --- MAYA SİSTEMİ (DÜZELTİLDİ) --- */
-        #maya-area {
+        /* --- MAYA GİRİŞ/ÇIKIŞ SİSTEMİ --- */
+        #maya-overlay {
             position: fixed;
-            bottom: 0;
-            right: 0;
-            width: 150px; /* Boyut küçültüldü ki butonu kapatmasın */
-            z-index: 100;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
         }
-        #maya-img {
-            width: 100%;
-            display: block;
-            /* Resim yüklenmezse diye arka plan rengi ekledik */
-            min-height: 100px;
-        }
-        #maya-bubble { 
-            position: fixed; 
-            bottom: 160px; /* Maya'nın üstünde dursun */
-            right: 20px; 
-            left: 20px; 
-            background: white; 
-            border: 4px solid #333; 
-            padding: 12px; 
-            border-radius: 15px; 
-            font-weight: bold; 
-            font-size: 13px; 
-            box-shadow: 5px 5px 0px #333; 
-            display: none; 
-            z-index: 101;
-            text-align: center;
-        }
-        /* -------------------------------- */
+        #maya-overlay.active { opacity: 1; pointer-events: auto; }
 
+        #maya-img-large {
+            width: 200px;
+            transform: translateY(20px);
+            transition: transform 0.5s ease;
+        }
+        #maya-overlay.active #maya-img-large { transform: translateY(0); }
+
+        #maya-speech {
+            background: white;
+            border: 4px solid #333;
+            padding: 20px;
+            border-radius: 20px;
+            margin-top: 20px;
+            width: 80%;
+            text-align: center;
+            font-weight: bold;
+            box-shadow: 8px 8px 0px #333;
+        }
+
+        .close-maya {
+            margin-top: 25px;
+            background: var(--m-green);
+            color: white;
+            border: 3px solid #333;
+            padding: 10px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        /* ------------------------------- */
+
+        .energy-box { width: 85%; height: 18px; background: #333; margin: 10px auto; border-radius: 9px; overflow: hidden; border: 2px solid #333; }
+        #energy-bar { width: 100%; height: 100%; background: #fff200; transition: width 0.3s; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 15px; }
-        .btn { background: var(--m-blue); color: white; border: 3px solid #333; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 11px; cursor: pointer; text-align: center; }
+        .btn { background: var(--m-blue); color: white; border: 3px solid #333; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 11px; text-align: center; }
     </style>
 </head>
 <body>
 
+<div id="maya-overlay">
+    <img id="maya-img-large" src="assets/maya.png" onerror="this.src='https://i.ibb.co/v4S8W5p/maya-cartoon.png'">
+    <div id="maya-speech">Hoş geldiniz Sayın Başkan! Şehrimiz harabe durumda. İlk M-Coin'lerimizi basarak işe başlayalım mı?</div>
+    <button class="close-maya" onclick="mayaGitsin()">EMREDERSİN MAYA!</button>
+</div>
+
 <div class="header">
-    <div id="lv">Lv. 1 BAŞKAN</div>
+    <div id="rank">Lv. 1 BAŞKAN</div>
 </div>
 
 <div class="wallet">
@@ -80,27 +97,22 @@
 
 <div class="grid">
     <div class="btn" onclick="buyAsset(100, 2)">🏪 FIRIN AÇ<br>100 🪙 (+2/sn)</div>
-    <div class="btn" style="background:var(--m-green)" onclick="mayaTalk('Halk sizi izliyor başkanım!')">⚔️ DİPLOMASİ</div>
-</div>
-
-<div id="maya-bubble"></div>
-<div id="maya-area" onclick="mayaTalk()">
-    <img id="maya-img" src="assets/maya.png" onerror="this.src='https://i.ibb.co/v4S8W5p/maya-cartoon.png'" alt="Maya">
+    <div class="btn" style="background:var(--m-green)" onclick="mayaGelsin('Şu an diplomatik ilişkilerimiz çok zayıf başkanım. Önce ekonomi!')">⚔️ DİPLOMASİ</div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let state = JSON.parse(localStorage.getItem('m_city_v5')) || {
-        coins: 0, energy: 1000, pps: 0, lv: 1
+    let state = JSON.parse(localStorage.getItem('m_city_v6')) || {
+        coins: 0, energy: 1000, pps: 0, firstTime: true
     };
 
     function updateUI() {
         document.getElementById('coins').innerText = Math.floor(state.coins);
         document.getElementById('en-num').innerText = Math.floor(state.energy);
         document.getElementById('energy-bar').style.width = (state.energy / 10) + "%";
-        localStorage.setItem('m_city_v5', JSON.stringify(state));
+        localStorage.setItem('m_city_v6', JSON.stringify(state));
     }
 
     function handleTap(e) {
@@ -109,8 +121,6 @@
             state.energy -= 1;
             updateUI();
             tg.HapticFeedback.impactOccurred('medium');
-        } else {
-            mayaTalk("Başkanım enerji bitti, biraz bekleyelim.");
         }
     }
 
@@ -118,18 +128,21 @@
         if (state.coins >= cost) {
             state.coins -= cost;
             state.pps += inc;
-            mayaTalk("Şehrimiz büyüyor başkanım!");
             updateUI();
+            mayaGelsin("Harika! Şehrimize yeni bir gelir kapısı açtık!");
         } else {
-            mayaTalk("Kasamızda yeterli M-Coin yok...");
+            mayaGelsin("Maalesef kasada yeterli M-Coin yok başkanım.");
         }
     }
 
-    function mayaTalk(msg) {
-        const bubble = document.getElementById('maya-bubble');
-        bubble.innerText = msg || "Buyurun başkanım, emrinizdeyim!";
-        bubble.style.display = 'block';
-        setTimeout(() => { bubble.style.display = 'none'; }, 3000);
+    // --- MAYA KONTROLÜ ---
+    function mayaGelsin(mesaj) {
+        if(mesaj) document.getElementById('maya-speech').innerText = mesaj;
+        document.getElementById('maya-overlay').classList.add('active');
+    }
+
+    function mayaGitsin() {
+        document.getElementById('maya-overlay').classList.remove('active');
     }
 
     setInterval(() => {
@@ -140,7 +153,11 @@
 
     window.onload = () => {
         updateUI();
-        setTimeout(() => mayaTalk("Hoş geldiniz başkanım!"), 500);
+        // Eğer ilk kez giriyorsa veya belirli aralıklarla Maya gelsin istiyorsan:
+        if(state.firstTime) {
+            setTimeout(mayaGelsin, 500);
+            state.firstTime = false;
+        }
     };
 </script>
 </body>
