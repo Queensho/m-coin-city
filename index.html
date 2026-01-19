@@ -3,97 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Coin City</title>
+    <title>M-Coin City: Rise of President</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --m-red: #e31b23; --m-green: #00a650; --m-blue: #008dce; --bg: #f0e6d2; }
-        body { font-family: 'Arial Black', sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; overflow-x: hidden; height: 100vh; }
+        :root { --m-red: #e31b23; --m-green: #00a650; --m-blue: #008dce; --m-gold: #f9a825; --bg: #f0e6d2; }
+        body { font-family: 'Arial Black', sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; overflow: hidden; height: 100vh; }
 
-        /* Üst Durum Paneli */
-        .header { background: var(--m-red); color: white; padding: 12px; display: flex; justify-content: space-between; border-bottom: 5px solid #333; font-size: 12px; }
+        /* Dashboard */
+        .status-bar { background: #333; color: white; padding: 5px 15px; display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 1px; }
+        .header { background: var(--m-red); color: white; padding: 15px; display: flex; justify-content: space-between; border-bottom: 6px solid #222; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        
+        /* Stats Card */
+        .main-stats { background: white; border: 4px solid #333; margin: 10px auto; width: 90%; border-radius: 15px; padding: 15px; text-align: center; box-shadow: 6px 6px 0px #333; position: relative; }
+        .coin-val { font-size: 40px; color: var(--m-green); display: block; }
+        .income-val { font-size: 14px; color: #555; font-weight: bold; }
 
-        /* Ana Gösterge Kartı */
-        .main-card { background: white; border: 4px solid #333; margin: 10px auto; width: 90%; padding: 10px; border-radius: 12px; text-align: center; box-shadow: 4px 4px 0px #333; }
-        .coin-display { font-size: 36px; color: var(--m-green); font-weight: bold; }
-        .income-display { font-size: 12px; color: #666; margin-top: 5px; font-weight: bold; }
+        /* Game Core */
+        #city-action { width: 190px; height: 190px; background: white; border: 10px solid #333; margin: 15px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: 0.05s; }
+        #city-action:active { transform: scale(0.94) rotate(2deg); }
+        #city-action img { width: 120px; }
 
-        /* Belediye Binası */
-        #city-core { width: 180px; height: 180px; background: white; border: 8px solid #333; margin: 15px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.05s; position: relative; }
-        #city-core:active { transform: scale(0.92); }
-        #city-core img { width: 110px; }
+        /* Resource Bars */
+        .bars { padding: 0 20px; }
+        .bar-label { font-size: 11px; font-weight: bold; margin: 4px 0; display: block; }
+        .progress-bg { width: 100%; height: 16px; background: #333; border-radius: 8px; border: 2px solid #333; overflow: hidden; margin-bottom: 10px; }
+        #energy-bar { width: 100%; height: 100%; background: var(--m-gold); transition: 0.2s; }
+        #xp-bar { width: 0%; height: 100%; background: var(--m-blue); transition: 0.5s; }
 
-        /* Enerji ve XP Barları */
-        .bar-container { width: 90%; margin: 5px auto; text-align: left; }
-        .bar-label { font-size: 10px; font-weight: bold; margin-bottom: 2px; display: block; }
-        .bar-bg { width: 100%; height: 14px; background: #333; border-radius: 7px; overflow: hidden; border: 2px solid #333; margin-bottom: 8px; }
-        #energy-fill { width: 100%; height: 100%; background: #fff200; transition: width 0.3s; }
-        #xp-fill { width: 0%; height: 100%; background: var(--m-blue); transition: width 0.5s; }
+        /* Build Menu */
+        .build-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; height: 180px; overflow-y: auto; background: rgba(0,0,0,0.05); }
+        .building-card { background: white; border: 3px solid #333; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 3px 3px 0 #333; transition: 0.2s; }
+        .building-card:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #333; }
+        .building-card b { font-size: 12px; display: block; color: var(--m-red); }
+        .building-card span { font-size: 10px; display: block; margin: 4px 0; }
+        .price-tag { background: var(--m-green); color: white; font-size: 11px; padding: 3px; border-radius: 4px; border: 2px solid #333; display: block; }
 
-        /* İnşaat Menüsü (Scroll edilebilir) */
-        .build-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; max-height: 200px; overflow-y: auto; }
-        .shop-item { background: white; border: 3px solid #333; padding: 8px; border-radius: 10px; text-align: center; font-size: 11px; box-shadow: 3px 3px 0px #333; }
-        .shop-item b { display: block; margin-bottom: 4px; }
-        .buy-btn { background: var(--m-green); color: white; border: 2px solid #333; width: 100%; padding: 4px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 10px; }
-        .buy-btn:disabled { background: #ccc; }
+        /* Maya Briefing */
+        #maya-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.5s; }
+        #maya-screen.hidden { transform: translateY(-100%); opacity: 0; }
+        #maya-img { width: 180px; filter: drop-shadow(0 0 15px var(--m-gold)); }
+        #maya-msg { background: white; border: 5px solid #333; padding: 20px; border-radius: 20px; width: 80%; text-align: center; font-weight: bold; margin-top: 20px; box-shadow: 10px 10px 0 var(--m-red); }
+        .maya-btn { margin-top: 30px; background: var(--m-gold); border: 4px solid #333; padding: 15px 40px; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 18px; }
 
-        /* Maya Brifing (Önceki stabil yapı) */
-        #maya-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: all 0.5s ease; opacity: 1; }
-        #maya-screen.hidden { transform: translateY(100%); opacity: 0; pointer-events: none; }
-        #maya-img-large { width: 160px; margin-bottom: 15px; }
-        #maya-speech { background: white; border: 4px solid #333; padding: 15px; border-radius: 20px; width: 75%; text-align: center; font-weight: bold; font-size: 14px; box-shadow: 6px 6px 0px #333; }
-        .maya-ok-btn { margin-top: 20px; background: #fff200; border: 3px solid #333; padding: 12px 30px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .floating-coin { position: absolute; color: var(--m-green); font-weight: bold; font-size: 20px; pointer-events: none; animation: floatUp 0.8s forwards; }
+        @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-120px); } }
     </style>
 </head>
 <body>
 
+<div class="status-bar">
+    <span>📡 SERVER: GLOBAL-1</span>
+    <span id="date-now">OCAK 2026</span>
+</div>
+
 <div id="maya-screen">
-    <img id="maya-img-large" src="assets/maya.png" onerror="this.src='https://i.ibb.co/v4S8W5p/maya-cartoon.png'">
-    <div id="maya-speech">Şehrimizi bir dünya başkenti yapmaya hazır mısınız?</div>
-    <button class="maya-ok-btn" onclick="mayaKapat()">DEVAM ET BAŞKANIM</button>
+    <img id="maya-img" src="assets/maya.png" onerror="this.src='https://i.ibb.co/v4S8W5p/maya-cartoon.png'">
+    <div id="maya-msg">Hoş geldiniz Sayın Başkan! Şehrimizin ekonomisi sizin ellerinizde. İlk coinlerimizi basmaya hazır mısınız?</div>
+    <button class="maya-btn" onclick="closeMaya()">EMRET BAŞKANIM!</button>
 </div>
 
 <div class="header">
-    <div id="rank-tag">🏛️ STAJYER BAŞKAN</div>
-    <div id="lv-tag">Lv. 1</div>
+    <div id="title">STAJYER BAŞKAN</div>
+    <div id="level-num">Lv. 1</div>
 </div>
 
-<div class="main-card">
-    <div class="coin-display">🪙 <span id="coin-count">0</span></div>
-    <div class="income-display">Saatlik Kazanç: +<span id="pps-count">0</span> M-Coin</div>
+<div class="main-stats">
+    <span class="coin-val">🪙 <span id="coin-total">0</span></span>
+    <span class="income-val">PASİF GELİR: +<span id="pps-total">0</span>/sn</span>
 </div>
 
-<div id="city-core" onclick="handleTap(event)">
+<div id="city-action" onclick="handleTap(event)">
     <img src="https://cdn-icons-png.flaticon.com/512/619/619153.png">
 </div>
 
-<div class="bar-container">
-    <span class="bar-label">⚡ ENERJİ REZERVİ (<span id="en-text">1000</span>)</span>
-    <div class="bar-bg"><div id="energy-fill"></div></div>
+<div class="bars">
+    <span class="bar-label">⚡ ENERJİ REZERVİ: <span id="en-num">1000</span></span>
+    <div class="progress-bg"><div id="energy-bar"></div></div>
     
     <span class="bar-label">📈 ŞEHİR TECRÜBESİ (XP)</span>
-    <div class="bar-bg"><div id="xp-fill"></div></div>
+    <div class="progress-bg"><div id="xp-bar"></div></div>
 </div>
 
-<div class="build-menu">
-    <div class="shop-item">
-        <b>🏪 Mahalle Fırını</b>
-        <span>+2/sn | 100 🪙</span>
-        <button class="buy-btn" onclick="buyBuilding('firin', 100, 2)">İNŞA ET</button>
+<div class="build-grid">
+    <div class="building-card" onclick="buy('Limonatacı', 150, 2)">
+        <b>🍋 Limonatacı</b>
+        <span>+2 M-Coin/sn</span>
+        <div class="price-tag">150 🪙</div>
     </div>
-    <div class="shop-item">
-        <b>🏦 Yerel Banka</b>
-        <span>+10/sn | 500 🪙</span>
-        <button class="buy-btn" onclick="buyBuilding('banka', 500, 10)">İNŞA ET</button>
+    <div class="building-card" onclick="buy('Bakkal', 1000, 12)">
+        <b>🏪 Bakkal</b>
+        <span>+12 M-Coin/sn</span>
+        <div class="price-tag">1k 🪙</div>
     </div>
-    <div class="shop-item">
-        <b>🏭 Fabrika</b>
-        <span>+50/sn | 2500 🪙</span>
-        <button class="buy-btn" onclick="buyBuilding('fabrika', 2500, 50)">İNŞA ET</button>
+    <div class="building-card" onclick="buy('Banka', 5000, 60)">
+        <b>🏦 Banka</b>
+        <span>+60 M-Coin/sn</span>
+        <div class="price-tag">5k 🪙</div>
     </div>
-    <div class="shop-item" style="background:#eee">
-        <b>⚔️ Savaş Ofisi</b>
-        <span>Çok Yakında!</span>
-        <button class="buy-btn" disabled>KİLİTLİ</button>
+    <div class="building-card" onclick="triggerChance()">
+        <b>🎲 Şans Kartı</b>
+        <span>Rastgele Olay</span>
+        <div class="price-tag">500 🪙</div>
     </div>
 </div>
 
@@ -101,73 +111,98 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let state = JSON.parse(localStorage.getItem('mcity_v8')) || {
-        coins: 0, energy: 1000, pps: 0, lv: 1, xp: 0, nextXp: 200
+    let db = JSON.parse(localStorage.getItem('mcity_final_v1')) || {
+        coins: 0, energy: 1000, pps: 0, lv: 1, xp: 0, nextXp: 500
     };
 
-    function updateUI() {
-        document.getElementById('coin-count').innerText = Math.floor(state.coins);
-        document.getElementById('pps-count').innerText = (state.pps * 3600).toLocaleString();
-        document.getElementById('en-text').innerText = Math.floor(state.energy);
-        document.getElementById('energy-fill').style.width = (state.energy / 10) + "%";
-        document.getElementById('xp-fill').style.width = (state.xp / state.nextXp * 100) + "%";
-        document.getElementById('lv-tag').innerText = "Lv. " + state.lv;
+    function update() {
+        document.getElementById('coin-total').innerText = Math.floor(db.coins).toLocaleString();
+        document.getElementById('pps-total').innerText = db.pps.toFixed(1);
+        document.getElementById('en-num').innerText = Math.floor(db.energy);
+        document.getElementById('energy-bar').style.width = (db.energy / 10) + "%";
+        document.getElementById('xp-bar').style.width = (db.xp / db.nextXp * 100) + "%";
+        document.getElementById('level-num').innerText = "Lv. " + db.lv;
         
-        if(state.lv > 5) document.getElementById('rank-tag').innerText = "🏙️ ŞEHİR PLANLAMACI";
-        if(state.lv > 10) document.getElementById('rank-tag').innerText = "💎 METROPOL BAŞKANI";
+        if(db.lv > 3) document.getElementById('title').innerText = "🏙️ ŞEHİR PLANLAMA";
+        if(db.lv > 7) document.getElementById('title').innerText = "🏛️ BELEDİYE BAŞKANI";
         
-        localStorage.setItem('mcity_v8', JSON.stringify(state));
-    }
-
-    function mayaKapat() {
-        document.getElementById('maya-screen').classList.add('hidden');
-        tg.HapticFeedback.notificationOccurred('success');
-    }
-
-    function mayaAc(msg) {
-        document.getElementById('maya-speech').innerText = msg;
-        document.getElementById('maya-screen').classList.remove('hidden');
+        localStorage.setItem('mcity_final_v1', JSON.stringify(db));
     }
 
     function handleTap(e) {
-        if (state.energy >= 1) {
-            state.coins += (1 + Math.floor(state.lv / 2));
-            state.energy -= 1;
-            state.xp += 5;
-            if (state.xp >= state.nextXp) levelUp();
-            updateUI();
+        if (db.energy >= 1) {
+            let gain = 1 + Math.floor(db.lv / 2);
+            db.coins += gain;
+            db.energy -= 1;
+            db.xp += 5;
+            if (db.xp >= db.nextXp) levelUp();
+            spawnCoin(e.clientX, e.clientY, "+" + gain);
+            update();
             tg.HapticFeedback.impactOccurred('medium');
         } else {
-            mayaAc("Başkanım, halk yorgun! Enerjinin dolmasını bekleyelim.");
+            openMaya("Başkanım enerji tükendi! Halkın dinlenmesi gerekiyor.");
         }
     }
 
     function levelUp() {
-        state.lv++;
-        state.xp = 0;
-        state.nextXp *= 2;
-        state.energy = 1000;
-        mayaAc("TEBRİKLER! Seviye Atladık. Şehir artık daha hızlı gelişiyor!");
+        db.lv++;
+        db.xp = 0;
+        db.nextXp *= 2.2;
+        db.energy = 1000;
+        openMaya("TEBRİKLER! Seviye atladık başkanım. Şehrin prestiji artıyor!");
     }
 
-    function buyBuilding(name, cost, income) {
-        if (state.coins >= cost) {
-            state.coins -= cost;
-            state.pps += income;
-            updateUI();
-            mayaAc("Harika bir yatırım! " + name + " şehrimize kazandırıldı.");
+    function buy(name, cost, inc) {
+        if (db.coins >= cost) {
+            db.coins -= cost;
+            db.pps += inc;
+            update();
+            tg.HapticFeedback.notificationOccurred('success');
+            openMaya(name + " inşa edildi! Gelirimiz arttı başkanım.");
         } else {
-            mayaAc("Bu inşaat için bütçemiz henüz yetersiz başkanım.");
+            openMaya("Bütçemiz yetersiz başkanım, biraz daha para lazım.");
         }
     }
 
+    function triggerChance() {
+        if (db.coins < 500) return openMaya("Şans kartı için 500 coin lazım.");
+        db.coins -= 500;
+        const events = [
+            { m: "Halktan bağış toplandı! +1000 Coin", a: () => db.coins += 1000 },
+            { m: "Ekonomik kriz! -300 Coin", a: () => db.coins = Math.max(0, db.coins - 300) },
+            { m: "Maya'dan hediye: Enerji doldu!", a: () => db.energy = 1000 }
+        ];
+        let e = events[Math.floor(Math.random() * events.length)];
+        e.a();
+        openMaya(e.m);
+        update();
+    }
+
+    function openMaya(msg) {
+        document.getElementById('maya-msg').innerText = msg;
+        document.getElementById('maya-screen').classList.remove('hidden');
+    }
+
+    function closeMaya() {
+        document.getElementById('maya-screen').classList.add('hidden');
+    }
+
+    function spawnCoin(x, y, txt) {
+        const div = document.createElement('div');
+        div.className = 'floating-coin';
+        div.style.left = x + 'px'; div.style.top = y + 'px';
+        div.innerText = txt;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 800);
+    }
+
     setInterval(() => {
-        state.coins += (state.pps / 10);
-        if (state.energy < 1000) state.energy += 0.5;
-        updateUI();
+        db.coins += (db.pps / 10);
+        if (db.energy < 1000) db.energy += 0.4;
+        update();
     }, 100);
 
-    window.onload = updateUI;
+    window.onload = update;
 </script>
 </body>
 </html>
