@@ -3,562 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Coin City: Visual Strategy</title>
+    <title>M-Coin City: Empire Strategic</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root {
-            --primary-bg: #E0E0E0; /* Light Grey */
-            --dark-wood: #4E342E;  /* Dark Brown for UI */
-            --grass-green: #689F38; /* Main map green */
-            --golden-accent: #FFC107; /* Gold for highlights */
-            --building-border: #795548; /* Brown for building borders */
-            --text-color: #333;
+        :root { --m-brown: #3E2723; --m-green: #2E7D32; --m-gold: #FFD600; --m-iron: #455A64; }
+        body { font-family: 'Verdana', sans-serif; background: #1A1A1A; margin: 0; padding: 0; color: #FFF; user-select: none; overflow: hidden; }
+
+        /* --- KAYNAK PANELİ (Gerçekçi Materyaller) --- */
+        .res-top {
+            background: linear-gradient(to bottom, #4E342E, #2D1B18);
+            display: grid; grid-template-columns: repeat(4, 1fr);
+            padding: 10px 5px; border-bottom: 3px solid #000; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
-        body {
-            font-family: 'Verdana', sans-serif;
-            background: var(--primary-bg);
-            margin: 0; padding: 0;
-            user-select: none;
-            color: var(--text-color);
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent; /* Disable default tap highlight */
+        .res-box { text-align: center; border-right: 1px solid rgba(255,255,255,0.1); }
+        .res-box:last-child { border-right: none; }
+        .res-box img { width: 24px; height: 24px; filter: drop-shadow(0 2px 2px #000); }
+        .res-box span { display: block; font-size: 14px; font-weight: bold; color: var(--m-gold); }
+
+        /* --- STRATEJİK KÖY HARİTASI --- */
+        .game-map {
+            width: 100%; height: 320px; 
+            background: url('https://img.freepik.com/premium-photo/aerial-view-green-fields-meadows-nature-landscape_124507-6818.jpg') center/cover;
+            position: relative; border-bottom: 4px solid #000;
         }
 
-        /* --- Header & Resources --- */
-        .top-bar {
-            background: var(--dark-wood);
-            color: white;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            padding: 8px 0;
-            border-bottom: 3px solid #000;
-            font-size: 10px;
-            text-align: center;
+        /* Bina Alanları (Realistic Plots) */
+        .building-site {
+            position: absolute; width: 70px; height: 70px;
+            background: rgba(255,255,255,0.15); border: 2px solid rgba(255,214,0,0.5);
+            border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s; backdrop-filter: blur(2px);
         }
-        .res-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 2px;
-        }
-        .res-icon { width: 20px; height: 20px; vertical-align: middle; }
-        .res-value { font-size: 14px; font-weight: bold; color: var(--golden-accent); }
+        .building-site:hover { background: rgba(255,214,0,0.2); }
+        .building-site img { width: 55px; height: 55px; display: none; filter: drop-shadow(0 4px 6px #000); }
+        .building-site.active img { display: block; }
+        .building-site b { font-size: 9px; text-transform: uppercase; color: #FFF; text-shadow: 1px 1px 2px #000; }
 
-        /* --- City Map / Village View --- */
-        .city-map-container {
-            width: 100%;
-            max-width: 480px; /* Max width for larger screens */
-            height: 300px;
-            background-color: var(--grass-green);
-            background-image: url('https://i.ibb.co/L90rCqg/grass-texture.png'); /* Seamless grass texture */
-            background-size: 100px;
-            margin: 10px auto;
-            border: 4px solid var(--dark-wood);
-            border-radius: 15px;
-            position: relative;
-            overflow: hidden; /* Ensure elements stay within bounds */
+        /* Konumlar */
+        .site-1 { top: 30px; left: 20%; } .site-2 { top: 30px; right: 20%; }
+        .site-merkez { top: 110px; left: 50%; transform: translateX(-50%); width: 90px; height: 90px; border-color: var(--m-gold); }
+        .site-3 { bottom: 30px; left: 20%; } .site-4 { bottom: 30px; right: 20%; }
+
+        /* --- İNŞAAT KUYRUĞU --- */
+        .construction-bar {
+            background: rgba(0,0,0,0.8); padding: 12px; margin: 10px; border: 1px solid var(--m-gold);
+            border-radius: 8px; display: none; text-align: center; font-size: 13px;
         }
 
-        .map-element {
-            position: absolute;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255, 255, 255, 0.7); /* Lighter background for empty plots */
-            border: 2px dashed var(--building-border);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.1s ease-out; /* Smooth press effect */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        /* --- MAYA STRATEJİ PANELİ --- */
+        .maya-panel {
+            background: #2D1B18; padding: 15px; border-top: 3px solid #000;
+            display: flex; align-items: center; gap: 15px;
         }
-        .map-element:active { transform: scale(0.95); } /* Visual feedback on press */
+        .maya-avatar { 
+            width: 60px; height: 60px; border-radius: 50%; 
+            border: 2px solid var(--m-gold); background: url('assets/maya.png') center/cover;
+            /* Fallback if local asset is missing */
+            background-image: url('https://img.freepik.com/premium-vector/professional-woman-avatar-cartoon-character_24877-44673.jpg'); background-size: cover;
+        }
+        .maya-speech { flex: 1; font-size: 12px; font-style: italic; color: #CCC; line-height: 1.4; }
 
-        .map-element.built {
-            background-color: white; /* Built elements look more solid */
-            border: 2px solid var(--building-border);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        /* --- MODAL (BİNA SEÇİMİ) --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: none; align-items: center; justify-content: center; z-index: 100;
         }
-        .map-element img {
-            width: 45px; height: 45px;
-            object-fit: contain; /* Keep aspect ratio */
+        .modal-body {
+            background: #3E2723; width: 85%; border: 3px solid var(--m-gold); border-radius: 15px; padding: 20px;
         }
-        .map-element span {
-            font-size: 10px;
-            font-weight: bold;
-            color: var(--text-color);
-            margin-top: 2px;
+        .build-item {
+            display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
         }
+        .build-item img { width: 45px; height: 45px; border-radius: 5px; }
+        .build-info { flex: 1; font-size: 11px; }
+        .btn-build { background: var(--m-green); color: white; border: none; padding: 8px 12px; border-radius: 4px; font-weight: bold; }
 
-        /* Specific Plot Positioning */
-        .plot-resource { width: 70px; height: 70px; }
-        .plot-building { width: 80px; height: 80px; }
-        
-        #res-wood-plot { top: 20px; left: 10%; }
-        #res-clay-plot { top: 20px; right: 10%; }
-        #res-iron-plot { bottom: 20px; left: 10%; }
-        #res-crop-plot { bottom: 20px; right: 10%; }
-
-        #main-building-plot { top: 80px; left: 50%; transform: translateX(-50%); width: 90px; height: 90px; border-color: var(--golden-accent); }
-        #building-slot-1 { top: 30px; left: 30%; }
-        #building-slot-2 { top: 30px; right: 30%; }
-        #building-slot-3 { bottom: 30px; left: 30%; }
-        #building-slot-4 { bottom: 30px; right: 30%; }
-
-
-        /* --- Build Queue --- */
-        .queue-box {
-            background: #FFFDE7; /* Light yellow */
-            padding: 10px;
-            margin: 10px auto;
-            max-width: 480px;
-            border: 2px solid var(--golden-accent);
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--dark-wood);
-            display: none;
-            text-align: center;
-        }
-        .queue-box span { color: var(--dark-wood); }
-
-        /* --- Maya Chat & Info Panel --- */
-        .info-panel {
-            padding: 15px;
-            background: #D7CCC8; /* Light brown */
-            border-top: 2px solid var(--dark-wood);
-            max-width: 480px;
-            margin: 0 auto;
-        }
-        .maya-chat {
-            background: white;
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid var(--building-border);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .maya-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        .maya-message { font-size: 12px; line-height: 1.4; color: var(--text-color); }
-        .population-info { font-size: 12px; font-weight: bold; color: var(--text-color); }
-
-        /* --- Tab Menu --- */
-        .tab-menu {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            padding: 10px;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            max-width: 480px;
-            background: var(--dark-wood);
-            box-sizing: border-box;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        .tab-btn {
-            background: var(--building-border);
-            color: white;
-            border: 1px solid #A1887F;
-            padding: 12px;
-            font-size: 11px;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .tab-btn:active { background-color: #5D4037; } /* Darker on press */
-
-        /* --- Modal (Build Menu) --- */
-        #build-modal {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        }
-        .modal-content {
-            background: white;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 15px;
-            padding: 20px;
-            border: 4px solid var(--dark-wood);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-        .modal-title { margin-top: 0; color: var(--dark-wood); }
-        .build-option {
-            border-bottom: 1px solid #ddd;
-            padding: 10px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .build-option:last-child { border-bottom: none; }
-        .build-info { text-align: left; }
-        .build-info b { display: block; font-size: 13px; color: var(--dark-wood); }
-        .build-info small { font-size: 10px; color: #666; }
-        .build-button {
-            background: var(--grass-green);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .build-button:active { background-color: #558B2F; } /* Darker on press */
-        .close-modal-btn {
-            width: 100%; margin-top: 15px; padding: 10px;
-            background: #E0E0E0; border: 1px solid #CCC;
-            border-radius: 5px; font-weight: bold; color: var(--dark-wood);
-            cursor: pointer;
-        }
+        /* --- NAV --- */
+        .bottom-nav { display: grid; grid-template-columns: repeat(3, 1fr); background: #000; position: fixed; bottom: 0; width: 100%; }
+        .nav-item { padding: 15px; text-align: center; font-size: 12px; font-weight: bold; border-top: 2px solid var(--m-brown); }
     </style>
 </head>
 <body>
 
-<div id="maya-notification" style="display: none;">
-    <img src="https://i.ibb.co/v4S8W5p/maya-cartoon.png" alt="Maya" class="maya-avatar">
-    <div class="maya-message" id="maya-popup-text"></div>
-    <button onclick="closeMayaPopup()">Kapat</button>
-</div>
-
-<div class="top-bar">
-    <div class="res-item">
-        <img src="https://i.ibb.co/XF33B60/wood.png" alt="Wood" class="res-icon">
-        <b>Odun</b><span id="res-wood" class="res-value">0</span>
+<div class="res-top">
+    <div class="res-box">
+        <img src="https://cdn-icons-png.flaticon.com/512/3561/3561494.png"> <span id="wood-val">200</span>
     </div>
-    <div class="res-item">
-        <img src="https://i.ibb.co/Qnvf8R9/clay.png" alt="Clay" class="res-icon">
-        <b>Tuğla</b><span id="res-clay" class="res-value">0</span>
+    <div class="res-box">
+        <img src="https://cdn-icons-png.flaticon.com/512/9439/9439396.png"> <span id="clay-val">200</span>
     </div>
-    <div class="res-item">
-        <img src="https://i.ibb.co/F8z05Bq/iron.png" alt="Iron" class="res-icon">
-        <b>Demir</b><span id="res-iron" class="res-value">0</span>
+    <div class="res-box">
+        <img src="https://cdn-icons-png.flaticon.com/512/10355/10355447.png"> <span id="iron-val">150</span>
     </div>
-    <div class="res-item">
-        <img src="https://i.ibb.co/L5Qy7d4/crop.png" alt="Crop" class="res-icon">
-        <b>Tahıl</b><span id="res-crop" class="res-value">0</span>
+    <div class="res-box">
+        <img src="https://cdn-icons-png.flaticon.com/512/2316/2316934.png"> <span id="crop-val">150</span>
     </div>
 </div>
 
-<div class="city-map-container">
-    <div id="res-wood-plot" class="map-element plot-resource" onclick="selectResourcePlot('wood')">
-        <img src="https://i.ibb.co/XF33B60/wood.png" alt="Wood">
-        <span>Odun</span>
-    </div>
-    <div id="res-clay-plot" class="map-element plot-resource" onclick="selectResourcePlot('clay')">
-        <img src="https://i.ibb.co/Qnvf8R9/clay.png" alt="Clay">
-        <span>Tuğla</span>
-    </div>
-    <div id="res-iron-plot" class="map-element plot-resource" onclick="selectResourcePlot('iron')">
-        <img src="https://i.ibb.co/F8z05Bq/iron.png" alt="Iron">
-        <span>Demir</span>
-    </div>
-    <div id="res-crop-plot" class="map-element plot-resource" onclick="selectResourcePlot('crop')">
-        <img src="https://i.ibb.co/L5Qy7d4/crop.png" alt="Crop">
-        <span>Tahıl</span>
-    </div>
-
-    <div id="main-building-plot" class="map-element plot-building built" onclick="openBuilding('TownHall')">
-        <img src="https://i.ibb.co/XjY051x/townhall.png" alt="Town Hall">
-        <span>Merkez Bina</span>
-    </div>
-
-    <div id="building-slot-1" class="map-element plot-building" onclick="selectBuildingPlot(1)">
-        <span>Boş Alan</span>
-    </div>
-    <div id="building-slot-2" class="map-element plot-building" onclick="selectBuildingPlot(2)">
-        <span>Boş Alan</span>
-    </div>
-    <div id="building-slot-3" class="map-element plot-building" onclick="selectBuildingPlot(3)">
-        <span>Boş Alan</span>
-    </div>
-    <div id="building-slot-4" class="map-element plot-building" onclick="selectBuildingPlot(4)">
-        <span>Boş Alan</span>
-    </div>
+<div class="game-map">
+    <div id="site-1" class="building-site site-1" onclick="openBuild(1)"><b>ARAZİ 1</b><img src="https://cdn-icons-png.flaticon.com/512/1423/1423377.png"></div>
+    <div id="site-2" class="building-site site-2" onclick="openBuild(2)"><b>ARAZİ 2</b><img src="https://cdn-icons-png.flaticon.com/512/10433/10433055.png"></div>
+    <div id="site-merkez" class="building-site site-merkez active"><b>MERKEZ</b><img src="https://cdn-icons-png.flaticon.com/512/2099/2099143.png"></div>
+    <div id="site-3" class="building-site site-3" onclick="openBuild(3)"><b>ARAZİ 3</b><img src=""></div>
+    <div id="site-4" class="building-site site-4" onclick="openBuild(4)"><b>ARAZİ 4</b><img src=""></div>
 </div>
 
-<div id="queue" class="queue-box">
-    🏗️ İnşa Ediliyor: <span id="q-name">-</span> (Kalan Süre: <span id="q-time">0</span>s)
+<div id="construction-queue" class="construction-bar">
+    🏗️ <span id="current-task">İnşaat Yok</span> - <b id="timer">0</b>sn
 </div>
 
-<div class="info-panel">
-    <div class="maya-chat">
-        <img src="https://i.ibb.co/v4S8W5p/maya-cartoon.png" alt="Maya" class="maya-avatar">
-        <div id="maya-text" class="maya-message">Hoş geldiniz Sayın Başkan. Köyümüzü geliştirmek için boş arazilere veya kaynak alanlarına tıklayın.</div>
-    </div>
-    <div class="population-info">👨‍👩‍👧‍👦 Nüfus: <span id="pop-val">10</span></div>
+<div class="maya-panel">
+    <div class="maya-avatar"></div>
+    <div class="maya-speech" id="maya-text">Sayın Başkan, köyümüzün kaynak üretimini artırmak için Odun Kampı veya Tuğla Ocağı kurmamızı öneririm.</div>
 </div>
 
-<div class="tab-menu">
-    <button class="tab-btn" onclick="showScreen('village')">🏘️ KÖY</button>
-    <button class="tab-btn" onclick="showScreen('military')">⚔️ KIŞLA</button>
-    <button class="tab-btn" onclick="showScreen('map')">🗺️ HARİTA</button>
-</div>
-
-<div id="build-modal">
-    <div class="modal-content">
-        <h3 class="modal-title">Bina İnşa Et</h3>
-        <div id="build-options">
-            <div class="build-option resource-option" data-type="wood" style="display: none;">
-                <div class="build-info">
-                    <b>Odun Kampı (Lv.<span id="wood-camp-lv">1</span>)</b><br>
-                    <small>Maliyet: 40🪵 20🧱 / Süre: 15s</small>
-                </div>
-                <button class="build-button" onclick="startBuild('Odun Kampı', {wood:40, clay:20}, 15, 'resource', 'wood-camp')">İnşa Et</button>
+<div id="modal-build" class="modal">
+    <div class="modal-body">
+        <h3 style="margin-top:0; color:var(--m-gold)">BİNA İNŞA ET</h3>
+        
+        <div class="build-item">
+            <img src="https://cdn-icons-png.flaticon.com/512/1423/1423377.png">
+            <div class="build-info">
+                <b>ODUN KAMPI</b><br>Üretim: +10 Odun/sa<br>Maliyet: 60🪵 40🧱
             </div>
-            <div class="build-option resource-option" data-type="clay" style="display: none;">
-                <div class="build-info">
-                    <b>Tuğla Ocağı (Lv.<span id="clay-pit-lv">1</span>)</b><br>
-                    <small>Maliyet: 20🪵 40🧱 / Süre: 15s</small>
-                </div>
-                <button class="build-button" onclick="startBuild('Tuğla Ocağı', {wood:20, clay:40}, 15, 'resource', 'clay-pit')">İnşa Et</button>
-            </div>
-            <div class="build-option resource-option" data-type="iron" style="display: none;">
-                <div class="build-info">
-                    <b>Demir Madeni (Lv.<span id="iron-mine-lv">1</span>)</b><br>
-                    <small>Maliyet: 50🪵 30🧱 20⛓️ / Süre: 20s</small>
-                </div>
-                <button class="build-button" onclick="startBuild('Demir Madeni', {wood:50, clay:30, iron:20}, 20, 'resource', 'iron-mine')">İnşa Et</button>
-            </div>
-            <div class="build-option resource-option" data-type="crop" style="display: none;">
-                <div class="build-info">
-                    <b>Tahıl Tarlası (Lv.<span id="crop-farm-lv">1</span>)</b><br>
-                    <small>Maliyet: 30🪵 30🧱 / Süre: 15s</small>
-                </div>
-                <button class="build-button" onclick="startBuild('Tahıl Tarlası', {wood:30, clay:30}, 15, 'resource', 'crop-farm')">İnşa Et</button>
-            </div>
-
-            <div class="build-option general-option" style="display: none;">
-                <div class="build-info">
-                    <b>Kışla (Lv.<span id="barracks-lv">0</span>)</b><br>
-                    <small>Maliyet: 60🧱 50⛓️ / Süre: 30s</small>
-                </div>
-                <button class="build-button" onclick="startBuild('Kışla', {clay:60, iron:50}, 30, 'general', 'barracks')">İnşa Et</button>
-            </div>
-            <div class="build-option general-option" style="display: none;">
-                <div class="build-info">
-                    <b>Ambar (Lv.<span id="granary-lv">0</span>)</b><br>
-                    <small>Maliyet: 40🪵 50🧱 / Süre: 20s</small>
-                </div>
-                <button class="build-button" onclick="startBuild('Ambar', {wood:40, clay:50}, 20, 'general', 'granary')">İnşa Et</button>
-            </div>
+            <button class="btn-build" onclick="startConstruction('Odun Kampı', 60, 40, 0, 20, 1)">KUR</button>
         </div>
-        <button class="close-modal-btn" onclick="closeModal()">Vazgeç</button>
+
+        <div class="build-item">
+            <img src="https://cdn-icons-png.flaticon.com/512/10433/10433055.png">
+            <div class="build-info">
+                <b>TUĞLA OCAĞI</b><br>Üretim: +10 Tuğla/sa<br>Maliyet: 40🪵 60🧱
+            </div>
+            <button class="btn-build" onclick="startConstruction('Tuğla Ocağı', 40, 60, 0, 20, 2)">KUR</button>
+        </div>
+
+        <button onclick="closeModal()" style="width:100%; margin-top:15px; background:none; color:#AAA; border:1px solid #AAA; padding:10px; border-radius:5px;">İPTAL</button>
     </div>
+</div>
+
+<div class="bottom-nav">
+    <div class="nav-item" style="color:var(--m-gold)">KÖY</div>
+    <div class="nav-item" onclick="tg.showAlert('Savaş Sistemi Yakında!')">ORDU</div>
+    <div class="nav-item" onclick="location.reload()">REFRESH</div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    // Game State - Her şey burada tutulacak
-    let state = JSON.parse(localStorage.getItem('mcity_visual_strat_v1')) || {
-        res: { wood: 200, clay: 200, iron: 150, crop: 150 },
-        prod: { wood: 5, clay: 5, iron: 2, crop: 2 }, // Üretim hızı (birim/saat)
-        pop: 10,
-        buildings: {
-            'wood-camp': { level: 0, img: 'https://i.ibb.co/XF33B60/wood.png', plot: 'res-wood-plot' },
-            'clay-pit': { level: 0, img: 'https://i.ibb.co/Qnvf8R9/clay.png', plot: 'res-clay-plot' },
-            'iron-mine': { level: 0, img: 'https://i.ibb.co/F8z05Bq/iron.png', plot: 'res-iron-plot' },
-            'crop-farm': { level: 0, img: 'https://i.ibb.co/L5Qy7d4/crop.png', plot: 'res-crop-plot' },
-            'townhall': { level: 1, img: 'https://i.ibb.co/XjY051x/townhall.png', plot: 'main-building-plot' },
-            'barracks': { level: 0, img: 'https://i.ibb.co/N21p8d8/barracks.png', plot: null }, // General building, no fixed plot
-            'granary': { level: 0, img: 'https://i.ibb.co/y4L2k8p/granary.png', plot: null }, // General building, no fixed plot
-        },
-        buildingSlots: { 1: null, 2: null, 3: null, 4: null }, // Which general building is in which slot
-        activeBuild: null // { name: 'Odun Kampı', type: 'resource', buildingKey: 'wood-camp', plotId: 'res-wood-plot', timeRemaining: 15 }
+    let state = JSON.parse(localStorage.getItem('mcity_empire_final')) || {
+        res: { wood: 300, clay: 300, iron: 200, crop: 200 },
+        prod: { wood: 5, clay: 5, iron: 2, crop: 2 },
+        buildings: { 1: null, 2: null, 3: null, 4: null },
+        activeBuild: null
     };
 
-    let selectedPlotId = null; // Either 'res-wood-plot' or 'building-slot-1' etc.
-    let selectedPlotType = null; // 'resource' or 'general'
+    let selectedPlot = null;
 
-    const buildCosts = {
-        'wood-camp': [{ wood: 40, clay: 20 }, { wood: 80, clay: 40 }], // Lv 1, Lv 2
-        'clay-pit': [{ wood: 20, clay: 40 }, { wood: 40, clay: 80 }],
-        'iron-mine': [{ wood: 50, clay: 30, iron: 20 }, { wood: 100, clay: 60, iron: 40 }],
-        'crop-farm': [{ wood: 30, clay: 30 }, { wood: 60, clay: 60 }],
-        'barracks': [{ clay: 60, iron: 50 }, { clay: 120, iron: 100 }],
-        'granary': [{ wood: 40, clay: 50 }, { wood: 80, clay: 100 }],
-    };
-
-    const buildTimes = {
-        'wood-camp': [15, 30],
-        'clay-pit': [15, 30],
-        'iron-mine': [20, 40],
-        'crop-farm': [15, 30],
-        'barracks': [30, 60],
-        'granary': [20, 40],
-    };
-
-    const prodIncrease = {
-        'wood-camp': 5,
-        'clay-pit': 5,
-        'iron-mine': 3,
-        'crop-farm': 3,
-    };
-
-    // --- UI Update Functions ---
     function updateUI() {
-        document.getElementById('res-wood').innerText = Math.floor(state.res.wood);
-        document.getElementById('res-clay').innerText = Math.floor(state.res.clay);
-        document.getElementById('res-iron').innerText = Math.floor(state.res.iron);
-        document.getElementById('res-crop').innerText = Math.floor(state.res.crop);
-        document.getElementById('pop-val').innerText = state.pop;
+        document.getElementById('wood-val').innerText = Math.floor(state.res.wood);
+        document.getElementById('clay-val').innerText = Math.floor(state.res.clay);
+        document.getElementById('iron-val').innerText = Math.floor(state.res.iron);
+        document.getElementById('crop-val').innerText = Math.floor(state.res.crop);
 
-        // Update levels in build modal
-        for (const key in state.buildings) {
-            if (state.buildings[key].level > 0) {
-                const lvSpan = document.getElementById(key + '-lv');
-                if (lvSpan) lvSpan.innerText = state.buildings[key].level;
-            }
-        }
-
-        // Update map elements based on state.buildings and state.buildingSlots
-        for (const buildingKey in state.buildings) {
-            const building = state.buildings[buildingKey];
-            let plotElement;
-
-            if (building.plot) { // Fixed resource or townhall plot
-                plotElement = document.getElementById(building.plot);
-                if (building.level > 0) {
-                    plotElement.classList.add('built');
-                    plotElement.innerHTML = `<img src="${building.img}" alt="${building.name}"><span>${building.name} Lv.${building.level}</span>`;
-                }
-            } else { // General building, assigned to a flexible slot
-                for (const slotId in state.buildingSlots) {
-                    if (state.buildingSlots[slotId] === buildingKey) {
-                        plotElement = document.getElementById('building-slot-' + slotId);
-                        plotElement.classList.add('built');
-                        plotElement.innerHTML = `<img src="${building.img}" alt="${building.name}"><span>${building.name} Lv.${building.level}</span>`;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Handle empty general building slots
+        // Binaları yerleştir
         for (let i = 1; i <= 4; i++) {
-            const slotElement = document.getElementById('building-slot-' + i);
-            if (!Object.values(state.buildingSlots).includes(state.buildingSlots[i]) || !state.buildingSlots[i]) {
-                slotElement.classList.remove('built');
-                slotElement.innerHTML = `<span>Boş Alan</span>`;
+            const site = document.getElementById('site-' + i);
+            const img = site.querySelector('img');
+            if (state.buildings[i]) {
+                site.classList.add('active');
+                site.querySelector('b').innerText = state.buildings[i];
+                if (state.buildings[i] === 'Odun Kampı') img.src = "https://cdn-icons-png.flaticon.com/512/1423/1423377.png";
+                if (state.buildings[i] === 'Tuğla Ocağı') img.src = "https://cdn-icons-png.flaticon.com/512/10433/10433055.png";
             }
         }
 
-        // Update build queue
         if (state.activeBuild) {
-            document.getElementById('queue').style.display = 'block';
-            document.getElementById('q-name').innerText = state.activeBuild.name;
-            document.getElementById('q-time').innerText = state.activeBuild.timeRemaining;
+            document.getElementById('construction-queue').style.display = 'block';
+            document.getElementById('current-task').innerText = state.activeBuild.name;
+            document.getElementById('timer').innerText = state.activeBuild.timeLeft;
         } else {
-            document.getElementById('queue').style.display = 'none';
+            document.getElementById('construction-queue').style.display = 'none';
         }
-        localStorage.setItem('mcity_visual_strat_v1', JSON.stringify(state));
+        localStorage.setItem('mcity_empire_final', JSON.stringify(state));
     }
 
-    // --- Interaction Functions ---
-    function showScreen(screenName) {
-        // This is a placeholder for actual screen changes (e.g., hiding/showing divs)
-        // For now, it just shows a Maya message
-        if (screenName === 'village') {
-            updateMayaMessage("Köyünüzün genel durumu iyi başkanım.");
-        } else if (screenName === 'military') {
-            updateMayaMessage("Kışla'nızı geliştirip asker eğitebilirsiniz.");
-        } else if (screenName === 'map') {
-            updateMayaMessage("Küresel harita yakında açılacak. Diğer köyleri yağmalayın!");
-        }
+    function openBuild(id) {
+        if (state.buildings[id]) return;
+        if (state.activeBuild) { tg.showAlert("Şu an devam eden bir inşaat var!"); return; }
+        selectedPlot = id;
+        document.getElementById('modal-build').style.display = 'flex';
     }
 
-    function updateMayaMessage(message) {
-        document.getElementById('maya-text').innerText = message;
-        // Optional: show a temporary popup if needed
-    }
+    function closeModal() { document.getElementById('modal-build').style.display = 'none'; }
 
-    function selectResourcePlot(type) {
-        if (state.activeBuild) { tg.showAlert("Şu an bir inşaat devam ediyor!"); return; }
-        selectedPlotId = state.buildings[type + '-camp'] ? state.buildings[type + '-camp'].plot : null;
-        selectedPlotType = 'resource';
-        
-        // Show only relevant build options
-        document.querySelectorAll('.resource-option').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.general-option').forEach(el => el.style.display = 'none');
-        document.querySelector(`.resource-option[data-type="${type}"]`).style.display = 'flex';
-        
-        document.getElementById('build-modal').style.display = 'flex';
-    }
-
-    function selectBuildingPlot(slotId) {
-        if (state.activeBuild) { tg.showAlert("Şu an bir inşaat devam ediyor!"); return; }
-        if (state.buildingSlots[slotId]) {
-            // Already built, show info or upgrade option
-            const buildingKey = state.buildingSlots[slotId];
-            updateMayaMessage(`${state.buildings[buildingKey].name} Lv.${state.buildings[buildingKey].level} bulunuyor. Yükseltme seçeneği yakında eklenecektir.`);
-            return;
-        }
-        selectedPlotId = 'building-slot-' + slotId;
-        selectedPlotType = 'general';
-
-        // Show only general building options
-        document.querySelectorAll('.resource-option').forEach(el => el.style.display = 'none');
-        document.querySelectorAll('.general-option').forEach(el => el.style.display = 'flex');
-
-        document.getElementById('build-modal').style.display = 'flex';
-    }
-
-    function openBuilding(buildingKey) {
-        // For main building, just show info for now
-        if (buildingKey === 'TownHall') {
-            updateMayaMessage(`Merkez Bina Lv.${state.buildings.townhall.level} Köyünüzün kalbi. Yakında yeni fonksiyonlar eklenecek.`);
-        }
-    }
-
-    function closeModal() {
-        document.getElementById('build-modal').style.display = 'none';
-        selectedPlotId = null;
-        selectedPlotType = null;
-    }
-
-    function startBuild(name, costs, baseTime, type, buildingKey) {
-        const currentLevel = state.buildings[buildingKey] ? state.buildings[buildingKey].level : 0;
-        const nextLevel = currentLevel + 1;
-
-        const actualCosts = buildCosts[buildingKey] && buildCosts[buildingKey][currentLevel] ? buildCosts[buildingKey][currentLevel] : costs;
-        const actualTime = buildTimes[buildingKey] && buildTimes[buildingKey][currentLevel] ? buildTimes[buildingKey][currentLevel] : baseTime;
-
-        if (state.res.wood >= (actualCosts.wood || 0) &&
-            state.res.clay >= (actualCosts.clay || 0) &&
-            state.res.iron >= (actualCosts.iron || 0) &&
-            state.res.crop >= (actualCosts.crop || 0)) {
-            
-            // Deduct resources
-            state.res.wood -= (actualCosts.wood || 0);
-            state.res.clay -= (actualCosts.clay || 0);
-            state.res.iron -= (actualCosts.iron || 0);
-            state.res.crop -= (actualCosts.crop || 0);
-
-            // Set active build
-            state.activeBuild = { name, timeRemaining: actualTime, plotId: selectedPlotId, type, buildingKey, nextLevel };
-            
+    function startConstruction(name, w, c, i, time, typeId) {
+        if (state.res.wood >= w && state.res.clay >= c) {
+            state.res.wood -= w;
+            state.res.clay -= c;
+            state.activeBuild = { name: name, timeLeft: time, plot: selectedPlot, typeId: typeId };
             closeModal();
             updateUI();
-            tg.HapticFeedback.impactOccurred('medium');
-            updateMayaMessage(`${name} inşaatı başladı. Kalan süre ${actualTime} saniye.`);
+            tg.HapticFeedback.notificationOccurred('success');
         } else {
-            tg.showAlert("Yetersiz hammadde!");
-            tg.HapticFeedback.notificationOccurred('error');
+            tg.showAlert("Yetersiz hammadde başkanım!");
         }
     }
 
-    // --- Game Loop ---
-    setInterval(()
+    // Gerçek Zamanlı Oyun Motoru
+    setInterval(() => {
+        // Kaynak Üretimi (Otomatik)
+        state.res.wood += state.prod.wood / 10;
+        state.res.clay += state.prod.clay / 10;
+        state.res.iron += state.prod.iron / 10;
+        state.res.crop += state.prod.crop / 10;
+
+        // İnşaat Takibi
+        if (state.activeBuild) {
+            state.activeBuild.timeLeft--;
+            if (state.activeBuild.timeLeft <= 0) {
+                const b = state.activeBuild;
+                state.buildings[b.plot] = b.name;
+                if (b.typeId === 1) state.prod.wood += 10;
+                if (b.typeId === 2) state.prod.clay += 10;
+                state.activeBuild = null;
+                document.getElementById('maya-text').innerText = "Müjde Başkanım! " + b.name + " tamamlandı. Üretim kapasitemiz arttı!";
+            }
+        }
+        updateUI();
+    }, 1000);
+
+    updateUI();
+</script>
+</body>
+</html>
