@@ -1,78 +1,192 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>M-Coin City</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body { font-family: sans-serif; background: #f0e6d2; text-align: center; margin: 0; padding: 0; user-select: none; }
-        .header { background: #d32f2f; color: white; padding: 15px; border-bottom: 5px solid #8b0000; }
-        .stats { font-size: 24px; font-weight: bold; margin: 20px; color: #2e7d32; }
-        #city-btn { width: 200px; height: 200px; background: white; border: 8px solid #333; border-radius: 20px; margin: 20px auto; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        #city-btn:active { transform: scale(0.95); }
-        .energy { width: 80%; height: 20px; background: #ccc; margin: 10px auto; border-radius: 10px; overflow: hidden; border: 2px solid #333; }
-        #energy-bar { width: 100%; height: 100%; background: orange; }
-        .shop { padding: 20px; }
-        button { width: 80%; padding: 15px; margin: 10px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; background: #1f7a31; color: white; }
+        :root {
+            --m-red: #d32f2f; --m-green: #1f7a31; --m-blue: #0288d1; --m-gold: #fbc02d;
+            --bg: #f4f1ea;
+        }
+        body { font-family: 'Arial Rounded MT Bold', sans-serif; background: var(--bg); margin: 0; padding: 0; user-select: none; color: #333; }
+        
+        /* Header & Stats */
+        .header { background: var(--m-red); color: white; padding: 10px; border-bottom: 5px solid #8b0000; display: flex; justify-content: space-between; align-items: center; px: 15px; }
+        .balance-card { background: white; margin: 15px auto; width: 85%; border-radius: 15px; border: 3px solid #333; padding: 10px; box-shadow: 0 5px 0 #333; }
+        .coin-text { font-size: 32px; color: var(--m-green); font-weight: bold; }
+
+        /* Board & Animation */
+        #game-board { width: 220px; height: 220px; background: white; border: 10px solid #333; border-radius: 20px; margin: 10px auto; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; transition: transform 0.05s; }
+        #game-board:active { transform: scale(0.92); }
+        #city-img { width: 140px; }
+
+        /* Energy & XP */
+        .bar-container { width: 85%; height: 15px; background: #ddd; margin: 5px auto; border-radius: 10px; border: 2px solid #333; overflow: hidden; }
+        #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff9800, #f57c00); transition: width 0.2s; }
+        #xp-fill { width: 0%; height: 100%; background: var(--m-blue); transition: width 0.5s; }
+
+        /* Shop & Grid */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; }
+        .card { background: white; border: 2px solid #333; border-radius: 10px; padding: 10px; text-align: center; box-shadow: 0 3px 0 #333; }
+        .card button { background: var(--m-green); color: white; border: none; padding: 8px; border-radius: 5px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .card button:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Popups (Şans Kartları) */
+        #popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); background: white; border: 5px solid #333; padding: 20px; z-index: 100; border-radius: 20px; width: 70%; text-align: center; transition: 0.3s; }
+        #popup.active { transform: translate(-50%, -50%) scale(1); }
+        .overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; z-index:90; }
+
+        .floating-text { position: absolute; font-weight: bold; color: var(--m-green); pointer-events: none; animation: floatUp 0.6s ease-out forwards; z-index: 50; }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } }
     </style>
 </head>
 <body>
-    <div class="header"> BAŞKANIN ODASI 🏛️ </div>
-    <div class="stats"> 🪙 <span id="coins">0</span> </div>
-    <div id="city-btn" onclick="clickCity()">
-        <img src="https://cdn-icons-png.flaticon.com/512/619/619153.png" width="120">
+
+<div class="header">
+    <div id="level-tag">Lv. 1 Çaylak Başkan</div>
+    <div id="status">🔵 Online</div>
+</div>
+
+<div class="balance-card">
+    <div class="coin-text">🪙 <span id="coins">0</span></div>
+    <div style="font-size: 12px; color: #666;">Pasif Gelir: <span id="pps">0</span>/sn</div>
+</div>
+
+<div id="game-board" onclick="handleTap(event)">
+    <img id="city-img" src="https://cdn-icons-png.flaticon.com/512/619/619153.png">
+</div>
+
+<div style="font-size: 12px; font-weight: bold;">⚡ Enerji: <span id="energy-val">1000</span></div>
+<div class="bar-container"><div id="energy-fill"></div></div>
+
+<div style="font-size: 12px; font-weight: bold;">📈 Tecrübe (XP)</div>
+<div class="bar-container"><div id="xp-fill"></div></div>
+
+<div class="grid">
+    <div class="card">
+        <div>🏪 Bakkal</div>
+        <div style="font-size: 10px;">+2 M-Coin/sn</div>
+        <button onclick="buy('bakkal', 150, 2)">150 🪙</button>
     </div>
-    <div class="energy"> <div id="energy-bar"></div> </div>
-    <div style="font-weight:bold">⚡ <span id="energy-text">1000</span> / 1000</div>
-    <div class="shop">
-        <button onclick="buyUpgrade()">Bakkal Al (100 M-Coin) 🏪</button>
+    <div class="card">
+        <div>☕ Kafe</div>
+        <div style="font-size: 10px;">+8 M-Coin/sn</div>
+        <button onclick="buy('kafe', 800, 8)">800 🪙</button>
     </div>
+    <div class="card">
+        <div>🏦 Banka</div>
+        <div style="font-size: 10px;">+25 M-Coin/sn</div>
+        <button onclick="buy('banka', 3000, 25)">3k 🪙</button>
+    </div>
+    <div class="card">
+        <div>⚔️ Savaş Ofisi</div>
+        <div style="font-size: 10px;">Saldırı Modu</div>
+        <button onclick="triggerChance()">Şans Kartı Çek</button>
+    </div>
+</div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
+<div id="popup">
+    <h2 id="pop-title">ŞANS KARTI</h2>
+    <p id="pop-desc">...</p>
+    <button onclick="closePopup()" style="background: #333; color:white; padding: 10px; border-radius: 10px; width: 100%;">TAMAM</button>
+</div>
+<div class="overlay" id="overlay"></div>
 
-        let coins = Number(localStorage.getItem('coins')) || 0;
-        let energy = 1000;
-        let passive = Number(localStorage.getItem('passive')) || 0;
+<script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
 
-        function updateUI() {
-            document.getElementById('coins').innerText = Math.floor(coins);
-            document.getElementById('energy-bar').style.width = (energy / 10) + "%";
-            document.getElementById('energy-text').innerText = Math.floor(energy);
-        }
+    let state = JSON.parse(localStorage.getItem('m_city_v2')) || {
+        coins: 0, pps: 0, energy: 1000, maxEnergy: 1000, xp: 0, nextXp: 500, lv: 1
+    };
 
-        function clickCity() {
-            if (energy >= 1) {
-                coins += 1;
-                energy -= 1;
-                updateUI();
-                save();
-            }
-        }
+    function updateUI() {
+        document.getElementById('coins').innerText = Math.floor(state.coins);
+        document.getElementById('pps').innerText = state.pps.toFixed(1);
+        document.getElementById('energy-val').innerText = Math.floor(state.energy);
+        document.getElementById('energy-fill').style.width = (state.energy / state.maxEnergy * 100) + "%";
+        document.getElementById('xp-fill').style.width = (state.xp / state.nextXp * 100) + "%";
+        document.getElementById('level-tag').innerText = `Lv. ${state.lv} Metropol Başkanı`;
+        save();
+    }
 
-        function buyUpgrade() {
-            if (coins >= 100) {
-                coins -= 100;
-                passive += 1;
-                updateUI();
-                save();
-            } else { alert("Yetersiz para!"); }
-        }
-
-        function save() {
-            localStorage.setItem('coins', coins);
-            localStorage.setItem('passive', passive);
-        }
-
-        setInterval(() => {
-            coins += (passive / 10);
-            if (energy < 1000) energy += 0.5;
+    function handleTap(e) {
+        if (state.energy >= 1) {
+            let gain = 1 + Math.floor(state.lv / 2);
+            state.coins += gain;
+            state.energy -= 1;
+            state.xp += 2;
+            if (state.xp >= state.nextXp) levelUp();
+            showAnim(e.clientX, e.clientY, "+" + gain);
             updateUI();
-        }, 100);
+            tg.HapticFeedback.impactOccurred('light');
+        }
+    }
 
+    function levelUp() {
+        state.lv++;
+        state.xp = 0;
+        state.nextXp *= 2;
+        state.maxEnergy += 200;
+        state.energy = state.maxEnergy;
+        showPopup("SEVİYE ATLADIN!", `Tebrikler Başkan! Artık Lv. ${state.lv} oldun. Enerjin yenilendi.`);
+    }
+
+    function buy(name, price, income) {
+        if (state.coins >= price) {
+            state.coins -= price;
+            state.pps += income;
+            updateUI();
+            tg.HapticFeedback.notificationOccurred('success');
+        } else {
+            tg.showAlert("Yetersiz M-Coin!");
+        }
+    }
+
+    function triggerChance() {
+        const events = [
+            { t: "PİYANGO!", d: "Şanslı bir gün! 500 M-Coin kazandın.", a: () => state.coins += 500 },
+            { t: "GELİR VERGİSİ!", d: "Devlet vergi topluyor. 200 M-Coin kaybettin.", a: () => state.coins = Math.max(0, state.coins - 200) },
+            { t: "EKONOMİK REFORM!", d: "Kısa süreliğine enerji barın doldu!", a: () => state.energy = state.maxEnergy }
+        ];
+        let ev = events[Math.floor(Math.random() * events.length)];
+        ev.a();
+        showPopup(ev.t, ev.d);
+    }
+
+    function showPopup(t, d) {
+        document.getElementById('pop-title').innerText = t;
+        document.getElementById('pop-desc').innerText = d;
+        document.getElementById('popup').classList.add('active');
+        document.getElementById('overlay').style.display = 'block';
+    }
+
+    function closePopup() {
+        document.getElementById('popup').classList.remove('active');
+        document.getElementById('overlay').style.display = 'none';
         updateUI();
-    </script>
+    }
+
+    function showAnim(x, y, txt) {
+        const el = document.createElement('div');
+        el.className = 'floating-text';
+        el.style.left = x + 'px'; el.style.top = y + 'px';
+        el.innerText = txt;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 600);
+    }
+
+    function save() { localStorage.setItem('m_city_v2', JSON.stringify(state)); }
+
+    setInterval(() => {
+        state.coins += (state.pps / 10);
+        if (state.energy < state.maxEnergy) state.energy += 0.3;
+        updateUI();
+    }, 100);
+
+    updateUI();
+</script>
 </body>
 </html>
