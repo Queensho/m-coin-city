@@ -3,190 +3,319 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>M-Coin City: Space Era</title>
+    <title>M-Coin City: Final Empire</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --m-red: #e31b23; --m-green: #00a650; --m-blue: #008dce; --m-gold: #f9a825; --m-dark: #1a1a1a; }
-        body { font-family: 'Arial Black', sans-serif; background: #0b0d17; margin: 0; padding: 0; user-select: none; overflow: hidden; height: 100vh; color: white; }
+        :root {
+            --m-red: #E31B23; --m-green: #00A650; --m-blue: #008DCE;
+            --m-gold: #FFD700; --space-bg: #0B0D17;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--space-bg);
+            color: white;
+            margin: 0; padding: 0;
+            user-select: none;
+            overflow: hidden;
+            height: 100vh;
+        }
 
-        /* Uzay Temalı Panel */
-        .top-status { background: rgba(0,0,0,0.8); padding: 5px 15px; display: flex; justify-content: space-between; font-size: 10px; border-bottom: 2px solid var(--m-blue); }
-        .header { background: var(--m-red); padding: 12px; display: flex; justify-content: space-between; border-bottom: 5px solid #000; box-shadow: 0 0 20px rgba(0,141,206,0.3); }
+        /* --- UI PANELS --- */
+        .header {
+            background: var(--m-red);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid #000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
 
-        /* Finansal Merkez */
-        .bank-vault { background: white; border: 4px solid #333; margin: 10px auto; width: 85%; border-radius: 15px; padding: 12px; text-align: center; color: #333; box-shadow: 6px 6px 0px var(--m-blue); }
-        .total-coins { font-size: 34px; color: var(--m-green); font-weight: bold; }
-        .inflation-info { font-size: 11px; color: #666; font-weight: bold; }
+        .stats-container {
+            background: white;
+            color: #333;
+            margin: 10px auto;
+            width: 90%;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            border: 4px solid #333;
+            box-shadow: 6px 6px 0px var(--m-blue);
+        }
 
-        /* Galaktik Şehir */
-        .space-city { width: 180px; height: 180px; background: rgba(255,255,255,0.1); border: 6px solid var(--m-blue); margin: 15px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; box-shadow: 0 0 30px var(--m-blue); }
-        .space-city:active { transform: scale(0.95); box-shadow: 0 0 50px var(--m-gold); }
-        #city-core-img { width: 120px; filter: drop-shadow(0 0 10px white); }
+        .coin-val { font-size: 36px; font-weight: 900; color: var(--m-green); }
+        .sub-stat { font-size: 12px; font-weight: bold; color: #666; }
 
-        /* Enerji ve Roket Yakıtı */
-        .progress-section { padding: 0 20px; }
-        .label-text { font-size: 10px; font-weight: bold; display: block; margin: 3px 0; color: var(--m-gold); }
-        .bar-outer { width: 100%; height: 14px; background: #333; border-radius: 7px; border: 2px solid var(--m-blue); overflow: hidden; margin-bottom: 8px; }
-        #energy-fill { width: 100%; height: 100%; background: var(--m-gold); }
-        #rocket-fill { width: 0%; height: 100%; background: var(--m-red); transition: width 0.5s; }
+        /* --- THE CITY CORE (CLICKER) --- */
+        .city-wrapper {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
 
-        /* Galaktik Menü */
-        .galactic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 15px; }
-        .g-btn { background: #fff; color: #333; border: 3px solid #000; padding: 10px; border-radius: 12px; font-size: 9px; font-weight: bold; text-align: center; cursor: pointer; box-shadow: 3px 3px 0 var(--m-blue); }
-        .g-btn.space { background: #e3f2fd; color: var(--m-blue); }
+        #city-visual {
+            font-size: 140px;
+            transition: transform 0.1s;
+            filter: drop-shadow(0 0 20px var(--m-blue));
+        }
 
-        /* Maya Uzay Brifingi */
-        .maya-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; }
-        .maya-modal.active { display: flex; }
-        .maya-avatar { width: 160px; border: 5px solid var(--m-blue); border-radius: 50%; box-shadow: 0 0 20px var(--m-blue); }
-        .speech-bubble { background: white; color: #333; border: 4px solid #000; padding: 20px; border-radius: 20px; width: 80%; font-weight: bold; margin: 15px 0; text-align: center; }
-        .btn-confirm { background: var(--m-blue); color: white; border: 3px solid #000; padding: 12px 40px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .city-wrapper:active #city-visual { transform: scale(0.9); }
 
-        .coin-pop { position: absolute; color: var(--m-gold); font-weight: bold; animation: flyUp 0.6s forwards; pointer-events: none; }
-        @keyframes flyUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
+        /* --- PROGRESS BARS --- */
+        .bars-area { padding: 0 25px; }
+        .bar-label { font-size: 10px; font-weight: bold; color: var(--m-gold); margin-bottom: 4px; display: block; }
+        .bar-bg { width: 100%; height: 16px; background: #222; border-radius: 8px; border: 2px solid #444; overflow: hidden; margin-bottom: 10px; }
+        #energy-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #FFD700, #FFA500); }
+        #rocket-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #00C8FF, #008DCE); transition: width 0.4s; }
+
+        /* --- ACTION GRID --- */
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-top: 2px solid #333;
+        }
+
+        .btn {
+            background: white;
+            color: #333;
+            border: 3px solid #333;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 900;
+            text-align: center;
+            box-shadow: 4px 4px 0px #000;
+        }
+        .btn:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #000; }
+        .btn.blue { background: #E3F2FD; color: var(--m-blue); }
+
+        /* --- MAYA BRIEFING SYSTEM --- */
+        #maya-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: 0.5s;
+        }
+        #maya-modal.active { display: flex; }
+
+        .maya-avatar {
+            width: 150px;
+            height: 150px;
+            background: white;
+            border-radius: 50%;
+            border: 5px solid var(--m-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+            box-shadow: 0 0 30px var(--m-gold);
+        }
+
+        .speech-bubble {
+            background: white;
+            color: #333;
+            border: 4px solid #333;
+            padding: 20px;
+            border-radius: 20px;
+            width: 80%;
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 8px 8px 0px var(--m-red);
+        }
+
+        .maya-btn {
+            margin-top: 25px;
+            background: var(--m-gold);
+            border: 3px solid #333;
+            padding: 12px 40px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* --- ANIMATIONS --- */
+        .float-text {
+            position: absolute;
+            font-weight: bold;
+            color: var(--m-gold);
+            animation: riseUp 0.6s forwards;
+            pointer-events: none;
+        }
+        @keyframes riseUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-100px); } }
     </style>
 </head>
 <body>
 
-<div class="top-status">
-    <span>🛰️ YÖRÜNGE DURUMU: STABİL</span>
-    <span id="multiplier-tag">ÇARPAN: x1.0</span>
+<div id="maya-modal">
+    <div class="maya-avatar">👩‍💼</div>
+    <div id="maya-text" class="speech-bubble">...</div>
+    <button class="maya-btn" onclick="closeMaya()">EMREDERSİN BAŞKANIM!</button>
 </div>
 
 <div class="header">
-    <div id="rank">🚀 GALAKTİK LİDER</div>
-    <div id="lv">Lv. 1</div>
+    <div id="rank-title" style="font-weight: 900;">🌌 GALAKTİK İMPARATOR</div>
+    <div id="level-display" style="background:white; color:black; padding:2px 8px; border-radius:5px; font-weight:bold;">Lv. 1</div>
 </div>
 
-<div class="bank-vault">
-    <div class="total-coins">🪙 <span id="coin-txt">0</span></div>
-    <div class="inflation-info">M-COIN DEĞERİ: <span id="value-txt">1.00</span> USD</div>
+<div class="stats-container">
+    <div class="coin-val">🪙 <span id="coins">0</span></div>
+    <div class="sub-stat">BORSA DEĞERİ: <span id="mcoin-value">1.00</span> USD</div>
 </div>
 
-<div class="space-city" onclick="handleTap(event)">
-    <img id="city-core-img" src="https://cdn-icons-png.flaticon.com/512/619/619153.png">
+<div class="city-wrapper" onclick="handleTap(event)">
+    <div id="city-visual">🏛️</div>
 </div>
 
-<div class="progress-section">
-    <span class="label-text">⚡ ENERJİ REZERVİ: <span id="en-num">1000</span></span>
-    <div class="bar-outer"><div id="energy-fill"></div></div>
-    <span class="label-text">🚀 ROKET YAKITI (AY GÖREVİ)</span>
-    <div class="bar-outer"><div id="rocket-fill"></div></div>
+<div class="bars-area">
+    <span class="bar-label">⚡ REZERV GÜCÜ: <span id="en-num">1000</span></span>
+    <div class="bar-bg"><div id="energy-fill"></div></div>
+    
+    <span class="bar-label">🚀 AY GÖREVİ (ROKET YAKITI)</span>
+    <div class="bar-bg"><div id="rocket-fill"></div></div>
 </div>
 
-<div class="galactic-grid">
-    <div class="g-btn space" onclick="launchRocket()">🚀 ROKETİ FIRLAT<br>(-2000 🪙)</div>
-    <div class="g-btn" onclick="centralBank()">🏛️ MERKEZ BANKASI<br>(Enflasyonu Düşür)</div>
-    <div class="g-btn" onclick="openMaya('Uzay madenciliği Lv. 15\'te açılacak!')">⛏️ MADENCİLİK</div>
-    <div class="g-btn" onclick="claimDaily()">🎁 GÜNLÜK YAKIT</div>
-</div>
-
-<div id="maya-modal" class="maya-modal">
-    <img src="assets/maya.png" class="maya-avatar" onerror="this.src='https://i.ibb.co/v4S8W5p/maya-cartoon.png'">
-    <div id="maya-msg" class="speech-bubble">Hoş geldiniz Başkanım!</div>
-    <button class="btn-confirm" onclick="closeMaya()">ANLAŞILDI</button>
+<div class="actions">
+    <div class="btn" onclick="buyAsset(500, 10)">🏦 MERKEZ BANKASI<br>(+10 PPS / 500 🪙)</div>
+    <div class="btn blue" onclick="launchRocket()">🚀 ROKETİ FIRLAT<br>(Kârı Katla!)</div>
+    <div class="btn" onclick="tradeBonds()">📉 BORSA İŞLEMİ<br>(Risk Al)</div>
+    <div class="btn" onclick="claimDaily()">🎁 GÜNLÜK HİBE</div>
 </div>
 
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let state = JSON.parse(localStorage.getItem('mcity_space_v1')) || {
-        coins: 0, pps: 5, energy: 1000, lv: 1, xp: 0, nextXp: 1000, rocket: 0, multiplier: 1.0, value: 1.00, lastDaily: 0
+    let state = JSON.parse(localStorage.getItem('mcity_final_safe')) || {
+        coins: 0, pps: 0, energy: 1000, lv: 1, xp: 0, nextXp: 1000,
+        rocket: 0, val: 1.0, lastDaily: 0, first: true
     };
 
-    function update() {
-        document.getElementById('coin-txt').innerText = Math.floor(state.coins).toLocaleString();
-        document.getElementById('value-txt').innerText = state.value.toFixed(2);
-        document.getElementById('multiplier-tag').innerText = "ÇARPAN: x" + state.multiplier.toFixed(1);
+    function updateUI() {
+        document.getElementById('coins').innerText = Math.floor(state.coins).toLocaleString();
+        document.getElementById('mcoin-value').innerText = state.val.toFixed(2);
         document.getElementById('en-num').innerText = Math.floor(state.energy);
         document.getElementById('energy-fill').style.width = (state.energy / 10) + "%";
         document.getElementById('rocket-fill').style.width = state.rocket + "%";
-        document.getElementById('lv').innerText = "Lv. " + state.lv;
+        document.getElementById('level-display').innerText = "Lv. " + state.lv;
         
-        // Şehir Görseli Gelişimi
-        const img = document.getElementById('city-core-img');
-        if(state.lv >= 5) img.src = "https://cdn-icons-png.flaticon.com/512/2099/2099143.png";
-        if(state.lv >= 10) img.src = "https://cdn-icons-png.flaticon.com/512/2534/2534005.png"; // Uzay Üssü
+        // Şehir Evrimi (Emoji Değişimi)
+        const city = document.getElementById('city-visual');
+        if(state.lv < 5) city.innerText = "🏛️";
+        else if(state.lv < 10) city.innerText = "🏢";
+        else if(state.lv < 20) city.innerText = "🏙️";
+        else city.innerText = "🚀";
 
-        localStorage.setItem('mcity_space_v1', JSON.stringify(state));
+        localStorage.setItem('mcity_final_safe', JSON.stringify(state));
     }
 
     function handleTap(e) {
         if (state.energy >= 1) {
-            let gain = (1 + Math.floor(state.lv / 2)) * state.multiplier * state.value;
+            let gain = (1 + Math.floor(state.lv / 2)) * state.val;
             state.coins += gain;
             state.energy -= 1;
-            state.xp += 15;
-            state.rocket = Math.min(100, state.rocket + 0.1);
+            state.xp += 10;
+            state.rocket = Math.min(100, state.rocket + 0.2);
             if (state.xp >= state.nextXp) levelUp();
-            showCoin(e.clientX, e.clientY, "+" + gain.toFixed(1));
-            update();
+            showFloat(e.clientX, e.clientY, "+" + gain.toFixed(1));
+            updateUI();
             tg.HapticFeedback.impactOccurred('medium');
         } else {
-            openMaya("Başkanım enerji bitti. Uzay istasyonu şarj oluyor!");
+            openMaya("Başkanım enerji tükendi, sistemlerin şarj olmasını bekleyelim!");
         }
     }
 
     function levelUp() {
-        state.lv++; state.xp = 0; state.nextXp *= 2.5; state.energy = 1000;
-        openMaya("MUHTEŞEM! Şehrimiz artık gezegenler arası bir güç.");
+        state.lv++; state.xp = 0; state.nextXp *= 2; state.energy = 1000;
+        openMaya("TEBRİKLER! Seviye atladık başkanım. İmparatorluğumuz genişliyor.");
+    }
+
+    function buyAsset(cost, pps) {
+        if (state.coins >= cost) {
+            state.coins -= cost;
+            state.pps += pps;
+            openMaya("Yeni bir finansal merkez kuruldu. Gelirimiz artıyor!");
+            updateUI();
+        } else {
+            openMaya("Başkanım bütçemiz yetersiz, biraz daha M-Coin basalım.");
+        }
     }
 
     function launchRocket() {
-        if(state.coins < 2000) return openMaya("Fırlatma için 2000 M-Coin lazım başkanım!");
-        if(state.rocket < 100) return openMaya("Yakıt henüz %100 değil!");
-        
-        state.coins -= 2000;
+        if(state.rocket < 100) return openMaya("Yakıt henüz %100 değil başkanım!");
         state.rocket = 0;
-        state.multiplier += 0.5;
-        state.value += 0.50;
-        openMaya("ROKET FIRLATILDI! M-Coin değer kazandı ve küresel çarpanınız arttı!");
-        update();
+        state.val += 0.5;
+        openMaya("ROKET AY'A ULAŞTI! M-Coin değeri fırladı!");
+        updateUI();
     }
 
-    function centralBank() {
-        if(state.coins < 500) return openMaya("Para politikasını yönetmek için 500 M-Coin lazım.");
-        state.coins -= 500;
-        state.value += 0.10;
-        openMaya("Merkez Bankası müdahale etti: Enflasyon düştü, coin değer kazandı!");
-        update();
+    function tradeBonds() {
+        let win = Math.random() > 0.45;
+        if(win) {
+            let winAmt = state.coins * 0.2;
+            state.coins += winAmt;
+            openMaya("Borsa operasyonu başarılı! +" + Math.floor(winAmt) + " M-Coin.");
+        } else {
+            state.coins *= 0.8;
+            openMaya("Borsada spekülasyon kurbanı olduk, bir miktar kaybettik.");
+        }
+        updateUI();
     }
 
     function claimDaily() {
         let now = Date.now();
         if(now - state.lastDaily > 86400000) {
-            state.rocket = Math.min(100, state.rocket + 25);
-            state.lastDaily = now;
-            openMaya("Günlük yakıt ikmali yapıldı: +%25 Roket Yakıtı!");
-            update();
-        } else { openMaya("Yeni yakıt yarın gelecek başkanım."); }
+            state.coins += 2000; state.lastDaily = now;
+            openMaya("Dünya Konseyi'nden yıllık hibe geldi: +2000 M-Coin!");
+        } else { openMaya("Yeni bütçe dönemi henüz başlamadı."); }
     }
 
-    function openMaya(m) {
-        document.getElementById('maya-msg').innerText = m;
+    function openMaya(txt) {
+        document.getElementById('maya-text').innerText = txt;
         document.getElementById('maya-modal').classList.add('active');
     }
-    function closeMaya() { document.getElementById('maya-modal').classList.remove('active'); }
 
-    function showCoin(x, y, t) {
-        const div = document.createElement('div');
-        div.className = 'coin-pop';
-        div.style.left = x + 'px'; div.style.top = y + 'px';
-        div.innerText = t;
-        document.body.appendChild(div);
-        setTimeout(() => div.remove(), 600);
+    function closeMaya() {
+        document.getElementById('maya-modal').classList.remove('active');
+    }
+
+    function showFloat(x, y, t) {
+        const d = document.createElement('div');
+        d.className = 'float-text';
+        d.style.left = x + 'px'; d.style.top = y + 'px';
+        d.innerText = t;
+        document.body.appendChild(d);
+        setTimeout(() => d.remove(), 600);
     }
 
     setInterval(() => {
-        state.coins += (state.pps * state.multiplier * state.value / 10);
-        if (state.energy < 1000) state.energy += 1;
-        // Zamanla değer hafifçe düşer (Enflasyon simülasyonu)
-        if (state.value > 0.5) state.value -= 0.001;
-        update();
+        state.coins += (state.pps * state.val / 10);
+        if (state.energy < 1000) state.energy += 0.8;
+        if (state.val > 0.5) state.val -= 0.001; // Enflasyon
+        updateUI();
     }, 100);
 
-    window.onload = update;
+    window.onload = () => {
+        updateUI();
+        if(state.first) {
+            setTimeout(() => openMaya("Hoş geldiniz Sayın İmparator! Ben Maya. Galaktik hakimiyetimiz bugün başlıyor!"), 800);
+            state.first = false;
+        }
+    };
 </script>
 </body>
 </html>
